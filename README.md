@@ -1,2 +1,2 @@
-# bidd-sport
+# Bidd Sport
 Sport Program
