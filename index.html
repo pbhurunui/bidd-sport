@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bidd Sports</title>
+    <title>BIDD SPORTS</title>
     <!-- Link to the Web App Manifest -->
     <link rel="manifest" href="manifest.json">
     <!-- Theme color for the browser address bar -->
@@ -71,7 +71,7 @@
                     <img id="schoolLogo" src="HurunuiCollegeLogoRefresh-07%20large.png" alt="School Logo" class="w-20 h-20 md:w-24 md:h-24 object-contain">
                 </div>
                 <div>
-                    <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Bidd Sports</h1>
+                    <h1 class="text-3xl md:text-4xl font-bold text-slate-900">BIDD SPORTS</h1>
                     <p class="text-slate-600 mt-1">Your official tool for managing sports competitions.</p>
                 </div>
             </div>
@@ -1419,6 +1419,18 @@
                 const withResults = participantsOfGender.filter(p => p.result !== null && p.result !== undefined);
                 if(withResults.length > 0) {
                      withResults.sort((a, b) => isTimeBased(currentEvent.eventType) ? a.result - b.result : b.result - a.result);
+                     
+                     if (withResults.length > 0) {
+                        withResults[0].placing = 1;
+                        for (let i = 1; i < withResults.length; i++) {
+                            if (withResults[i].result === withResults[i - 1].result) {
+                                withResults[i].placing = withResults[i - 1].placing;
+                            } else {
+                                withResults[i].placing = i + 1;
+                            }
+                        }
+                    }
+
                      const qualifiers = withResults.filter(p => p.placing <= 3);
                      if (qualifiers.length > 0) {
                         doc.text(`${gender} Qualifiers`, 14, startY);
@@ -1579,7 +1591,14 @@
             deleteConfirmModal.showModal();
         });
         confirmDeleteBtn.addEventListener('click', handleDelete);
-        uploadCsvEventsBtn.addEventListener('click', () => csvFileInput.click());
+        uploadCsvBtn.addEventListener('click', () => { 
+            deleteContext = { type: 'csv-single' };
+            csvFileInput.click();
+        });
+        uploadCsvEventsBtn.addEventListener('click', () => {
+             deleteContext = { type: 'csv-all' };
+             csvFileInput.click()
+        });
         csvFileInput.addEventListener('change', handleFileSelect);
         confirmCsvImport.addEventListener('click', handleConfirmCsvImport);
         document.querySelectorAll('.cancel-btn').forEach(btn => btn.addEventListener('click', () => btn.closest('dialog').close()));
