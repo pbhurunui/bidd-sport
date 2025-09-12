@@ -835,7 +835,7 @@
         }
         function createParticipantRow(participant, rank, scoringMethod) {
             const row = document.createElement('tr');
-            row.className = 'border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50';
+            row.className = 'border-b border-slate-200 hover:bg-slate-50';
             const hasResult = participant.result !== null && participant.result !== undefined;
             let displayResult = hasResult ? (isTimeBased(scoringMethod) ? formatTime(participant.result) : participant.result) : 'N/A';
             
@@ -870,7 +870,7 @@
 
             const editButton = document.createElement('button');
             editButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>`;
-            editButton.className = 'text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition';
+            editButton.className = 'text-slate-500 hover:text-indigo-600';
             editButton.title = "Edit Participant";
             editButton.addEventListener('click', () => {
                 editParticipantIdInput.value = participant.id;
@@ -884,7 +884,7 @@
             if (hasResult) {
                 const clearButton = document.createElement('button');
                 clearButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>`;
-                clearButton.className = 'text-slate-500 hover:text-red-600 dark:hover:text-red-400 transition';
+                clearButton.className = 'text-slate-500 hover:text-red-600';
                 clearButton.title = "Clear Result";
                 clearButton.addEventListener('click', () => handleClearResult(participant.id));
                 actionsCell.appendChild(clearButton);
@@ -1140,11 +1140,11 @@
             housePointsList.innerHTML = sortedHouses.map(([name, score]) => {
                 const houseColor = houseColors[name] || { bg: 'bg-gray-400', border: 'border-gray-400' };
                 return `
-                    <li class="flex justify-between items-center p-3 rounded-md border-l-4 ${houseColor.border} bg-slate-50 dark:bg-slate-700/50">
+                    <li class="flex justify-between items-center p-3 rounded-md border-l-4 ${houseColor.border} bg-slate-50">
                         <div class="flex items-center">
-                            <span class="font-semibold text-slate-800 dark:text-slate-200">${name}</span>
+                            <span class="font-semibold text-slate-800">${name}</span>
                         </div>
-                        <span class="font-bold text-xl text-indigo-600 dark:text-indigo-400">${score}</span>
+                        <span class="font-bold text-xl text-indigo-600">${score}</span>
                     </li>
                 `;
             }).join('');
@@ -1356,9 +1356,6 @@
             renderParticipants(currentParticipants, currentEvent);
         });
 
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            themeToggle.checked = true;
-        }
         themeToggle.addEventListener('change', () => {
             if (themeToggle.checked) {
                 document.documentElement.classList.add('dark');
