@@ -70,7 +70,9 @@
         <!-- Header -->
         <header class="flex items-center justify-between gap-4 md:gap-6 mb-6 md:mb-8">
             <div class="flex items-center gap-4 md:gap-6">
-                <img id="schoolLogo" src="HurunuiCollegeLogoRefresh-07%20large.png" alt="School Logo" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-contain shadow-md">
+                 <div class="p-2 bg-white rounded-lg shadow-md">
+                    <img id="schoolLogo" src="HurunuiCollegeLogoRefresh-07%20large.png" alt="School Logo" class="w-20 h-20 md:w-24 md:h-24 object-contain">
+                </div>
                 <div>
                     <h1 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">BIDD SPORTS</h1>
                     <p class="text-slate-600 dark:text-slate-400 mt-1">Your official tool for managing athletics meets.</p>
@@ -188,6 +190,7 @@
                                         </button>
                                     </th>
                                     <th class="p-3 font-semibold text-sm text-slate-600 dark:text-slate-300">House</th>
+                                    <th class="p-3 font-semibold text-sm text-slate-600 dark:text-slate-300">Participated</th>
                                     <th class="p-3 font-semibold text-sm text-slate-600 dark:text-slate-300">Result</th>
                                     <th class="p-3 font-semibold text-sm text-slate-600 dark:text-slate-300">Actions</th>
                                 </tr>
@@ -679,9 +682,15 @@
             const houseColor = houseColors[participant.houseGroup] || { bg: 'bg-gray-200', text: 'text-gray-800' };
             const houseBadge = `<span class="px-2 py-1 text-xs font-semibold leading-tight rounded-full ${houseColor.bg} ${houseColor.text}">${participant.houseGroup}</span>`;
             
-            row.innerHTML = `<td class="p-3 font-medium">${rank}</td><td class="p-3">${participant.athleteName}</td><td class="p-3">${houseBadge}</td><td class="p-3">${displayResult}</td><td class="p-3"></td>`;
+            const participationCheckbox = `
+                <td class="p-3 text-center">
+                    <input type="checkbox" data-id="${participant.id}" class="participation-check h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" ${participant.participated ? 'checked' : ''}>
+                </td>
+            `;
+
+            row.innerHTML = `<td class="p-3 font-medium">${rank}</td><td class="p-3">${participant.athleteName}</td><td class="p-3">${houseBadge}</td>${participationCheckbox}<td class="p-3">${displayResult}</td><td class="p-3"></td>`;
             
-            const actionsCell = row.cells[4];
+            const actionsCell = row.cells[5];
             actionsCell.className = 'p-3 flex items-center gap-2';
             
             const resultButton = document.createElement('button');
@@ -716,6 +725,8 @@
                 actionsCell.appendChild(clearButton);
             }
 
+            row.querySelector('.participation-check').addEventListener('change', (e) => handleToggleParticipation(e.target.dataset.id, e.target.checked));
+
             return row;
         }
         async function fetchResults(meetId, eventId, event) {
@@ -730,7 +741,7 @@
             e.preventDefault();
             if(!currentMeetId || !currentEventId) return;
             const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId, 'results');
-            const dataBuilder = fd => ({ athleteName: fd.get('athleteName'), houseGroup: fd.get('houseGroup'), result: null, createdAt: new Date() });
+            const dataBuilder = fd => ({ athleteName: fd.get('athleteName'), houseGroup: fd.get('houseGroup'), result: null, participated: false, createdAt: new Date() });
             handleFormSubmit(e, addParticipantModal, collectionRef, dataBuilder);
         });
 
@@ -776,6 +787,17 @@
             }
         }
 
+         async function handleToggleParticipation(participantId, isChecked) {
+            if (!currentMeetId || !currentEventId || !participantId) return;
+            try {
+                const participantDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId, 'results', participantId);
+                await updateDoc(participantDocRef, { participated: isChecked });
+            } catch (error) {
+                console.error("Error updating participation:", error);
+            }
+        }
+
+
         async function handleUpdateResult(e) {
             e.preventDefault();
             const participantId = editResultParticipantId.value;
@@ -783,7 +805,7 @@
             if (!currentMeetId || !currentEventId || !participantId) return;
             try {
                 const participantDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId, 'results', participantId);
-                await updateDoc(participantDocRef, { result: resultValue });
+                await updateDoc(participantDocRef, { result: resultValue, participated: true }); // Also mark as participated
 
                 const eventDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId);
                 const resultsColRef = collection(eventDocRef, 'results');
@@ -878,7 +900,7 @@
                     const houseGroup = row[houseColumn];
                     if (firstName && surname && houseGroup) {
                         const athleteName = `${firstName.trim()} ${surname.trim()}`;
-                        batch.set(doc(resultsCol), { athleteName: athleteName, houseGroup: houseGroup.trim(), result: null, createdAt: new Date() });
+                        batch.set(doc(resultsCol), { athleteName: athleteName, houseGroup: houseGroup.trim(), result: null, participated: false, createdAt: new Date() });
                     }
                 });
                 await batch.commit();
@@ -902,7 +924,7 @@
                 const participants = resultsSnapshot.docs.map(d => d.data());
                 
                 participants.forEach(p => {
-                    if (housePoints.hasOwnProperty(p.houseGroup)) {
+                    if (p.participated && housePoints.hasOwnProperty(p.houseGroup)) {
                         housePoints[p.houseGroup] += participationPoint;
                     }
                 });
