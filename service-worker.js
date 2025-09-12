@@ -1,7 +1,7 @@
 // This service worker file is for Progressive Web App (PWA) functionality.
 // It allows the app to work offline by caching assets.
 
-const CACHE_NAME = 'bidd-sports-cache-v5'; // Incremented cache version
+const CACHE_NAME = 'bidd-sports-cache-v6'; // Incremented cache version
 const urlsToCache = [
   '/',
   'index.html',
@@ -26,9 +26,9 @@ self.addEventListener('install', event => {
         console.log('Opened cache and caching assets for offline use.');
         return Promise.all(
           urlsToCache.map(url => {
-            // For cross-origin requests, we need to create a new Request object with no-cors mode for some, but not all.
-            // Let's use a standard request and log errors if they fail.
-            const request = new Request(url, { mode: 'cors' });
+            // For cross-origin requests, we need to create a new Request object.
+            // Using 'no-cors' can lead to opaque responses, but it's a pragmatic way to cache third-party scripts.
+            const request = (url.startsWith('http')) ? new Request(url, { mode: 'no-cors' }) : url;
             return cache.add(request).catch(error => {
               console.warn(`Failed to cache ${url}:`, error);
             });
@@ -56,12 +56,8 @@ self.addEventListener('fetch', event => {
 
                 // Otherwise, fetch from the network.
                 return fetch(event.request).then(networkResponse => {
-                    // Check if we received a valid response
-                    if (networkResponse && networkResponse.status === 200) {
-                         // IMPORTANT: Clone the response. A response is a stream
-                        // and because we want the browser to consume the response
-                        // as well as the cache consuming the response, we need
-                        // to clone it so we have two streams.
+                     // Check if we received a valid response and it's not from Firebase (to avoid caching dynamic data)
+                    if (networkResponse && networkResponse.status === 200 && !networkResponse.url.includes('firestore.googleapis.com')) {
                         const responseToCache = networkResponse.clone();
                         cache.put(event.request, responseToCache);
                     }
