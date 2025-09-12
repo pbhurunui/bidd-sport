@@ -12,8 +12,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <!-- PDF Generation Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.autotable.min.js" onload="window.pdfLibrariesLoaded = true;"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        // Apply dark mode immediately to prevent flash of light mode
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark')
+        } else {
+          document.documentElement.classList.remove('dark')
+        }
+    </script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -42,7 +50,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800">
+<body class="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200">
 
     <!-- 
       Tailwind CSS Safelist:
@@ -60,18 +68,26 @@
     <div id="app" class="container mx-auto p-4 md:p-6 max-w-7xl">
 
         <!-- Header -->
-        <header class="flex items-center gap-4 md:gap-6 mb-6 md:mb-8">
-            <img id="schoolLogo" src="HurunuiCollegeLogoRefresh-07%20large.png" alt="School Logo" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-contain shadow-md">
-            <div>
-                <h1 class="text-3xl md:text-4xl font-bold text-slate-900">BIDD SPORTS</h1>
-                <p class="text-slate-600 mt-1">Your official tool for managing athletics meets.</p>
+        <header class="flex items-center justify-between gap-4 md:gap-6 mb-6 md:mb-8">
+            <div class="flex items-center gap-4 md:gap-6">
+                <img id="schoolLogo" src="HurunuiCollegeLogoRefresh-07%20large.png" alt="School Logo" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-contain shadow-md">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">BIDD SPORTS</h1>
+                    <p class="text-slate-600 dark:text-slate-400 mt-1">Your official tool for managing athletics meets.</p>
+                </div>
             </div>
+            <!-- Dark Mode Toggle -->
+            <label for="theme-toggle" class="inline-flex relative items-center cursor-pointer">
+                <input type="checkbox" value="" id="theme-toggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Dark Mode</span>
+            </label>
         </header>
 
         <!-- Loading State -->
         <div id="loading" class="flex flex-col justify-center items-center py-20">
             <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-24 w-24"></div>
-            <p id="loading-message" class="mt-4 text-slate-600 text-center">Connecting to database...</p>
+            <p id="loading-message" class="mt-4 text-slate-600 dark:text-slate-400 text-center">Connecting to database...</p>
         </div>
         
         <!-- Main Content (Hidden until loaded) -->
@@ -80,69 +96,69 @@
              <!-- Meets View -->
             <div id="meetsView">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-semibold text-slate-800">Meets</h2>
+                    <h2 class="text-2xl font-semibold text-slate-800 dark:text-slate-200">Meets</h2>
                     <button id="addMeetBtn" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-indigo-700 transition duration-200">
                         + Add Meet
                     </button>
                 </div>
-                 <p class="text-slate-500 mb-4 -mt-2">Select a meet to view its events or create a new one.</p>
+                 <p class="text-slate-500 dark:text-slate-400 mb-4 -mt-2">Select a meet to view its events or create a new one.</p>
                 <div id="meetsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- Meet cards will be inserted here -->
                 </div>
-                 <div id="noMeetsMessage" class="hidden text-center py-16 bg-white rounded-lg shadow-sm">
-                    <h3 class="text-xl font-medium text-slate-700">No meets yet!</h3>
-                    <p class="text-slate-500 mt-2">Click the "+ Add Meet" button to get started.</p>
+                 <div id="noMeetsMessage" class="hidden text-center py-16 bg-white dark:bg-slate-800 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-medium text-slate-700 dark:text-slate-300">No meets yet!</h3>
+                    <p class="text-slate-500 dark:text-slate-400 mt-2">Click the "+ Add Meet" button to get started.</p>
                 </div>
             </div>
             
             <!-- Events View -->
             <div id="eventsView" class="hidden">
                  <div class="mb-4">
-                     <button id="backToMeetsBtn" class="text-indigo-600 hover:text-indigo-800 font-medium transition duration-200">
+                     <button id="backToMeetsBtn" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium transition duration-200">
                         &larr; Back to Meets
                     </button>
                 </div>
-                <div id="housePointsContainer" class="mb-8 bg-white p-6 rounded-lg shadow-lg">
+                <div id="housePointsContainer" class="mb-8 bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
                     <div class="flex justify-between items-center mb-2">
-                        <h2 id="housePointsTitle" class="text-2xl font-semibold text-slate-800">House Points</h2>
+                        <h2 id="housePointsTitle" class="text-2xl font-semibold text-slate-800 dark:text-slate-200">House Points</h2>
                         <button id="printHousePointsBtn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
                             Loading...
                         </button>
                     </div>
-                     <p class="text-sm text-slate-500 mb-4">Placing: 1st (5), 2nd (3), 3rd (1). Participation: 1 point per athlete.</p>
+                     <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Placing: 1st (5), 2nd (3), 3rd (1). Participation: 1 point per athlete.</p>
                     <ol id="housePointsList" class="space-y-3">
                         <!-- House points will be dynamically inserted here -->
                     </ol>
                 </div>
 
                 <div class="flex justify-between items-center mb-4">
-                    <h2 id="eventsTitle" class="text-2xl font-semibold text-slate-800">Events</h2>
+                    <h2 id="eventsTitle" class="text-2xl font-semibold text-slate-800 dark:text-slate-200">Events</h2>
                     <button id="addEventBtn" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-indigo-700 transition duration-200">
                         + Add Event
                     </button>
                 </div>
-                 <p class="text-slate-500 mb-4 -mt-2">Click on an event to view results, or add a new event for this meet.</p>
+                 <p class="text-slate-500 dark:text-slate-400 mb-4 -mt-2">Click on an event to view results, or add a new event for this meet.</p>
                 <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- Event cards will be inserted here -->
                 </div>
-                 <div id="noEventsMessage" class="hidden text-center py-16 bg-white rounded-lg shadow-sm">
-                    <h3 class="text-xl font-medium text-slate-700">No events yet!</h3>
-                    <p class="text-slate-500 mt-2">Click the "+ Add Event" button to get started.</p>
+                 <div id="noEventsMessage" class="hidden text-center py-16 bg-white dark:bg-slate-800 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-medium text-slate-700 dark:text-slate-300">No events yet!</h3>
+                    <p class="text-slate-500 dark:text-slate-400 mt-2">Click the "+ Add Event" button to get started.</p>
                 </div>
             </div>
 
             <!-- Results View (Initially hidden) -->
             <div id="resultsView" class="hidden">
                 <div class="mb-4">
-                     <button id="backToEventsBtn" class="text-indigo-600 hover:text-indigo-800 font-medium transition duration-200">
+                     <button id="backToEventsBtn" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium transition duration-200">
                         &larr; Back to Events
                     </button>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow-lg">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
                     <div class="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-4">
                         <div>
-                            <h2 id="resultsEventName" class="text-3xl font-bold text-slate-900"></h2>
-                            <p id="resultsEventInfo" class="text-slate-500"></p>
+                            <h2 id="resultsEventName" class="text-3xl font-bold text-slate-900 dark:text-white"></h2>
+                            <p id="resultsEventInfo" class="text-slate-500 dark:text-slate-400"></p>
                         </div>
                         <div class="flex gap-2 flex-wrap justify-end">
                              <button id="printResultsBtn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
@@ -157,23 +173,23 @@
                             </button>
                         </div>
                     </div>
-                     <p class="text-slate-500 mb-4 -mt-2">Add participants manually or upload a CSV. Click actions to add/edit results or edit athlete details.</p>
+                     <p class="text-slate-500 dark:text-slate-400 mb-4 -mt-2">Add participants manually or upload a CSV. Click actions to add/edit results or athlete details.</p>
                     <div id="resultsContainer" class="overflow-x-auto">
                         <table class="w-full text-left min-w-[600px]">
-                            <thead class="bg-slate-50 border-b border-slate-200">
+                            <thead class="bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600">
                                 <tr>
-                                    <th class="p-3 font-semibold text-sm">Placing</th>
+                                    <th class="p-3 font-semibold text-sm text-slate-600 dark:text-slate-300">Placing</th>
                                     <th class="p-3 font-semibold text-sm">
-                                        <button id="sortByNameBtn" class="flex items-center gap-1 hover:text-indigo-600 transition-colors">
+                                        <button id="sortByNameBtn" class="flex items-center gap-1 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                                             Athlete Name
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                               <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 12l-4-4m4 4l4-4m6-4v12m0-12l4 4m-4-4l-4 4" />
                                             </svg>
                                         </button>
                                     </th>
-                                    <th class="p-3 font-semibold text-sm">House</th>
-                                    <th class="p-3 font-semibold text-sm">Result</th>
-                                    <th class="p-3 font-semibold text-sm">Actions</th>
+                                    <th class="p-3 font-semibold text-sm text-slate-600 dark:text-slate-300">House</th>
+                                    <th class="p-3 font-semibold text-sm text-slate-600 dark:text-slate-300">Result</th>
+                                    <th class="p-3 font-semibold text-sm text-slate-600 dark:text-slate-300">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="resultsTableBody">
@@ -181,7 +197,7 @@
                             </tbody>
                         </table>
                         <div id="noParticipantsMessage" class="hidden text-center py-12">
-                            <p class="text-slate-500">No participants have been added to this event yet.</p>
+                            <p class="text-slate-500 dark:text-slate-400">No participants have been added to this event yet.</p>
                         </div>
                     </div>
                 </div>
@@ -197,15 +213,15 @@
 
     <!-- Modals -->
     <dialog id="addMeetModal" class="modal p-0 rounded-lg shadow-xl max-w-md w-full">
-        <div class="modal-content bg-white p-6 rounded-lg">
-            <h3 class="text-xl font-bold mb-4">Add New Meet</h3>
+        <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg">
+            <h3 class="text-xl font-bold mb-4 dark:text-white">Add New Meet</h3>
             <form id="addMeetForm">
                 <div class="mb-6">
-                    <label for="meetName" class="block text-sm font-medium text-slate-700">Meet Name</label>
-                    <input type="text" id="meetName" name="meetName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Annual Athletics 2025" required>
+                    <label for="meetName" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Meet Name</label>
+                    <input type="text" id="meetName" name="meetName" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" placeholder="e.g., Annual Athletics 2025" required>
                 </div>
                 <div class="flex justify-end gap-3">
-                    <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
+                    <button type="button" class="cancel-btn bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition">Cancel</button>
                     <button type="submit" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Create Meet</button>
                 </div>
             </form>
@@ -213,40 +229,40 @@
     </dialog>
 
     <dialog id="addEventModal" class="modal p-0 rounded-lg shadow-xl max-w-md w-full">
-        <div class="modal-content bg-white p-6 rounded-lg">
-            <h3 class="text-xl font-bold mb-4">Add New Event</h3>
+        <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg">
+            <h3 class="text-xl font-bold mb-4 dark:text-white">Add New Event</h3>
             <form id="addEventForm">
                 <div class="mb-4">
-                    <label for="eventName" class="block text-sm font-medium text-slate-700">Event Name</label>
-                    <input type="text" id="eventName" name="eventName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Boys U12 100m Sprint" required>
+                    <label for="eventName" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Event Name</label>
+                    <input type="text" id="eventName" name="eventName" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" placeholder="e.g., Boys U12 100m Sprint" required>
                 </div>
                 <div class="mb-4">
-                    <label for="eventType" class="block text-sm font-medium text-slate-700">Event Type</label>
-                    <select id="eventType" name="eventType" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                    <label for="eventType" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Event Type</label>
+                    <select id="eventType" name="eventType" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" required>
                         <option value="track">Track (lower time is better)</option>
                         <option value="field">Field (higher score is better)</option>
                     </select>
                 </div>
                  <div class="mb-4">
-                    <label for="eventUnits" class="block text-sm font-medium text-slate-700">Units</label>
-                    <input type="text" id="eventUnits" name="eventUnits" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., s, m, cm" required>
+                    <label for="eventUnits" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Units</label>
+                    <input type="text" id="eventUnits" name="eventUnits" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" placeholder="e.g., s, m, cm" required>
                 </div>
                 <div class="grid grid-cols-3 gap-4 mb-6">
                     <div class="col-span-1">
-                        <label for="eventRecord" class="block text-sm font-medium text-slate-700">Record</label>
-                        <input type="number" step="any" id="eventRecord" name="eventRecord" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
+                        <label for="eventRecord" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Record</label>
+                        <input type="number" step="any" id="eventRecord" name="eventRecord" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm">
                     </div>
                     <div class="col-span-2">
-                        <label for="recordHolder" class="block text-sm font-medium text-slate-700">Record Holder</label>
-                        <input type="text" id="recordHolder" name="recordHolder" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
+                        <label for="recordHolder" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Record Holder</label>
+                        <input type="text" id="recordHolder" name="recordHolder" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm">
                     </div>
                     <div class="col-span-1">
-                         <label for="recordYear" class="block text-sm font-medium text-slate-700">Year</label>
-                        <input type="number" id="recordYear" name="recordYear" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
+                         <label for="recordYear" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Year</label>
+                        <input type="number" id="recordYear" name="recordYear" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm">
                     </div>
                 </div>
                 <div class="flex justify-end gap-3">
-                    <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
+                    <button type="button" class="cancel-btn bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition">Cancel</button>
                     <button type="submit" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Create Event</button>
                 </div>
             </form>
@@ -254,16 +270,16 @@
     </dialog>
 
     <dialog id="addParticipantModal" class="modal p-0 rounded-lg shadow-xl max-w-md w-full">
-        <div class="modal-content bg-white p-6 rounded-lg">
-            <h3 class="text-xl font-bold mb-4">Add Participant</h3>
+        <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg">
+            <h3 class="text-xl font-bold mb-4 dark:text-white">Add Participant</h3>
             <form id="addParticipantForm">
                 <div class="mb-4">
-                    <label for="athleteName" class="block text-sm font-medium text-slate-700">Athlete Name</label>
-                    <input type="text" id="athleteName" name="athleteName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                    <label for="athleteName" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Athlete Name</label>
+                    <input type="text" id="athleteName" name="athleteName" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" required>
                 </div>
                 <div class="mb-6">
-                    <label for="houseGroup" class="block text-sm font-medium text-slate-700">House Group</label>
-                    <select id="houseGroup" name="houseGroup" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                    <label for="houseGroup" class="block text-sm font-medium text-slate-700 dark:text-slate-300">House Group</label>
+                    <select id="houseGroup" name="houseGroup" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" required>
                         <option value="Mason">Mason</option>
                         <option value="Sheppard">Sheppard</option>
                         <option value="Sumner">Sumner</option>
@@ -271,7 +287,7 @@
                     </select>
                 </div>
                 <div class="flex justify-end gap-3">
-                    <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
+                    <button type="button" class="cancel-btn bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition">Cancel</button>
                     <button type="submit" class="bg-teal-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-teal-700 transition">Add Participant</button>
                 </div>
             </form>
@@ -279,17 +295,17 @@
     </dialog>
 
     <dialog id="editParticipantModal" class="modal p-0 rounded-lg shadow-xl max-w-md w-full">
-        <div class="modal-content bg-white p-6 rounded-lg">
-            <h3 class="text-xl font-bold mb-4">Edit Participant</h3>
+        <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg">
+            <h3 class="text-xl font-bold mb-4 dark:text-white">Edit Participant</h3>
             <form id="editParticipantForm">
                 <input type="hidden" id="editParticipantId" name="participantId">
                 <div class="mb-4">
-                    <label for="editAthleteName" class="block text-sm font-medium text-slate-700">Athlete Name</label>
-                    <input type="text" id="editAthleteName" name="athleteName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                    <label for="editAthleteName" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Athlete Name</label>
+                    <input type="text" id="editAthleteName" name="athleteName" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" required>
                 </div>
                 <div class="mb-6">
-                    <label for="editHouseGroup" class="block text-sm font-medium text-slate-700">House Group</label>
-                    <select id="editHouseGroup" name="houseGroup" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                    <label for="editHouseGroup" class="block text-sm font-medium text-slate-700 dark:text-slate-300">House Group</label>
+                    <select id="editHouseGroup" name="houseGroup" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" required>
                         <option value="Mason">Mason</option>
                         <option value="Sheppard">Sheppard</option>
                         <option value="Sumner">Sumner</option>
@@ -297,7 +313,7 @@
                     </select>
                 </div>
                 <div class="flex justify-end gap-3">
-                    <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
+                    <button type="button" class="cancel-btn bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition">Cancel</button>
                     <button type="submit" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Save Changes</button>
                 </div>
             </form>
@@ -305,17 +321,17 @@
     </dialog>
     
     <dialog id="editResultModal" class="modal p-0 rounded-lg shadow-xl max-w-md w-full">
-        <div class="modal-content bg-white p-6 rounded-lg">
-            <h3 class="text-xl font-bold mb-4">Enter Result</h3>
-            <p class="mb-4">Entering result for <strong id="editResultAthleteName"></strong>.</p>
+        <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg">
+            <h3 class="text-xl font-bold mb-4 dark:text-white">Enter Result</h3>
+            <p class="mb-4 dark:text-slate-300">Entering result for <strong id="editResultAthleteName" class="dark:text-white"></strong>.</p>
             <form id="editResultForm">
                 <input type="hidden" id="editResultParticipantId" name="participantId">
                 <div class="mb-6">
-                    <label for="resultValue" class="block text-sm font-medium text-slate-700">Result</label>
-                    <input type="number" step="any" id="resultValue" name="resultValue" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                    <label for="resultValue" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Result</label>
+                    <input type="number" step="any" id="resultValue" name="resultValue" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" required>
                 </div>
                 <div class="flex justify-end gap-3">
-                    <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
+                    <button type="button" class="cancel-btn bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition">Cancel</button>
                     <button type="submit" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Save Result</button>
                 </div>
             </form>
@@ -323,43 +339,43 @@
     </dialog>
 
     <dialog id="csvUploadModal" class="modal p-0 rounded-lg shadow-xl max-w-2xl w-full">
-        <div class="modal-content bg-white p-6 rounded-lg">
-            <h3 class="text-xl font-bold mb-4">Import Participants from CSV</h3>
-            <p class="text-slate-600 mb-4">Map the columns from your CSV file to the required fields.</p>
+        <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg">
+            <h3 class="text-xl font-bold mb-4 dark:text-white">Import Participants from CSV</h3>
+            <p class="text-slate-600 dark:text-slate-400 mb-4">Map the columns from your CSV file to the required fields.</p>
             <div id="csvMapping" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
-                    <label for="csvFirstName" class="block text-sm font-medium text-slate-700">First Name Column</label>
-                    <select id="csvFirstName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></select>
+                    <label for="csvFirstName" class="block text-sm font-medium text-slate-700 dark:text-slate-300">First Name Column</label>
+                    <select id="csvFirstName" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm"></select>
                 </div>
                 <div>
-                    <label for="csvSurname" class="block text-sm font-medium text-slate-700">Surname Column</label>
-                    <select id="csvSurname" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></select>
+                    <label for="csvSurname" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Surname Column</label>
+                    <select id="csvSurname" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm"></select>
                 </div>
                 <div>
-                    <label for="csvHouseGroup" class="block text-sm font-medium text-slate-700">House Group Column</label>
-                    <select id="csvHouseGroup" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></select>
+                    <label for="csvHouseGroup" class="block text-sm font-medium text-slate-700 dark:text-slate-300">House Group Column</label>
+                    <select id="csvHouseGroup" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm"></select>
                 </div>
             </div>
-            <p class="text-sm font-medium text-slate-700 mb-2">Data Preview (first 5 rows)</p>
-            <div class="overflow-x-auto border rounded-lg">
+            <p class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Data Preview (first 5 rows)</p>
+            <div class="overflow-x-auto border rounded-lg dark:border-slate-600">
                 <table class="w-full text-left">
-                    <thead id="csvPreviewHead" class="bg-slate-50"></thead>
+                    <thead id="csvPreviewHead" class="bg-slate-50 dark:bg-slate-700"></thead>
                     <tbody id="csvPreviewBody"></tbody>
                 </table>
             </div>
             <div class="flex justify-end gap-3 mt-6">
-                <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
+                <button type="button" class="cancel-btn bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition">Cancel</button>
                 <button type="button" id="confirmCsvImport" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Confirm & Import</button>
             </div>
         </div>
     </dialog>
 
     <dialog id="deleteConfirmModal" class="modal p-0 rounded-lg shadow-xl max-w-sm w-full">
-        <div class="modal-content bg-white p-6 rounded-lg">
-            <h3 class="text-xl font-bold mb-2">Are you sure?</h3>
-            <p id="deleteConfirmText" class="text-slate-600 mb-6">This action cannot be undone.</p>
+        <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg">
+            <h3 class="text-xl font-bold mb-2 dark:text-white">Are you sure?</h3>
+            <p id="deleteConfirmText" class="text-slate-600 dark:text-slate-400 mb-6">This action cannot be undone.</p>
             <div class="flex justify-end gap-3">
-                <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
+                <button type="button" class="cancel-btn bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition">Cancel</button>
                 <button id="confirmDeleteBtn" class="bg-red-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-red-700 transition">Delete</button>
             </div>
         </div>
@@ -482,6 +498,7 @@
         const printHousePointsBtn = document.getElementById('printHousePointsBtn');
         const printResultsBtn = document.getElementById('printResultsBtn');
         const sortByNameBtn = document.getElementById('sortByNameBtn');
+        const themeToggle = document.getElementById('theme-toggle');
 
         function showView(view) {
             meetsView.classList.toggle('hidden', view !== 'meets');
@@ -504,9 +521,9 @@
             noMeetsMessage.classList.toggle('hidden', meets.length > 0);
             meets.forEach(meet => {
                 const card = document.createElement('div');
-                card.className = 'bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer';
+                card.className = 'bg-white dark:bg-slate-800 p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer';
                 card.dataset.id = meet.id;
-                card.innerHTML = `<h3 class="text-xl font-bold text-slate-800 truncate">${meet.name}</h3>`;
+                card.innerHTML = `<h3 class="text-xl font-bold text-slate-800 dark:text-slate-200 truncate">${meet.name}</h3>`;
                 card.addEventListener('click', () => {
                     currentMeetId = meet.id;
                     currentMeetName = meet.name;
@@ -549,9 +566,9 @@
             noEventsMessage.classList.toggle('hidden', events.length > 0);
             events.forEach(event => {
                 const card = document.createElement('div');
-                card.className = 'bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer';
+                card.className = 'bg-white dark:bg-slate-800 p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer';
                 card.dataset.id = event.id;
-                card.innerHTML = `<h3 class="text-xl font-bold text-slate-800 truncate">${event.name}</h3><p class="text-slate-500 capitalize">${event.type} Event</p>`;
+                card.innerHTML = `<h3 class="text-xl font-bold text-slate-800 dark:text-slate-200 truncate">${event.name}</h3><p class="text-slate-500 dark:text-slate-400 capitalize">${event.type} Event</p>`;
                 card.addEventListener('click', () => {
                     currentEventId = event.id;
                     currentEventName = event.name;
@@ -561,7 +578,7 @@
                     let recordText = '';
                     if (event.record) {
                         const formattedRecord = event.type === 'track' ? formatTime(event.record) : event.record;
-                        recordText = `Record: ${formattedRecord}${event.units}`;
+                        recordText = `Record: ${formattedRecord}${event.units || ''}`;
                         if (event.recordHolder) {
                             recordText += ` (${event.recordHolder}`;
                             if (event.recordYear) {
@@ -653,7 +670,7 @@
         }
         function createParticipantRow(participant, rank, eventType) {
             const row = document.createElement('tr');
-            row.className = 'border-b border-slate-200 hover:bg-slate-50';
+            row.className = 'border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50';
             const hasResult = participant.result !== null && participant.result !== undefined;
             let displayResult = hasResult ? (eventType === 'track' ? formatTime(participant.result) : participant.result) : 'N/A';
             
@@ -682,7 +699,7 @@
 
             const editButton = document.createElement('button');
             editButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>`;
-            editButton.className = 'text-slate-500 hover:text-indigo-600 transition';
+            editButton.className = 'text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition';
             editButton.title = "Edit Athlete";
             editButton.addEventListener('click', () => {
                 editParticipantIdInput.value = participant.id;
@@ -691,6 +708,15 @@
                 editParticipantModal.showModal();
             });
             actionsCell.appendChild(editButton);
+
+            if (hasResult) {
+                const clearButton = document.createElement('button');
+                clearButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>`;
+                clearButton.className = 'text-slate-500 hover:text-red-600 dark:hover:text-red-400 transition';
+                clearButton.title = "Clear Result";
+                clearButton.addEventListener('click', () => handleClearResult(participant.id));
+                actionsCell.appendChild(clearButton);
+            }
 
             return row;
         }
@@ -739,6 +765,16 @@
                 editParticipantModal.close();
             } catch (error) {
                 console.error("Error updating participant:", error);
+            }
+        }
+        
+        async function handleClearResult(participantId) {
+            if (!currentMeetId || !currentEventId || !participantId) return;
+            try {
+                const participantDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId, 'results', participantId);
+                await updateDoc(participantDocRef, { result: null });
+            } catch (error) {
+                console.error("Error clearing result:", error);
             }
         }
 
@@ -900,11 +936,11 @@
             housePointsList.innerHTML = sortedHouses.map(([name, score]) => {
                 const houseColor = houseColors[name] || { bg: 'bg-gray-400', border: 'border-gray-400' };
                 return `
-                    <li class="flex justify-between items-center p-3 rounded-md border-l-4 ${houseColor.border} bg-slate-50">
+                    <li class="flex justify-between items-center p-3 rounded-md border-l-4 ${houseColor.border} bg-slate-50 dark:bg-slate-700/50">
                         <div class="flex items-center">
-                            <span class="font-semibold text-slate-800">${name}</span>
+                            <span class="font-semibold text-slate-800 dark:text-slate-200">${name}</span>
                         </div>
-                        <span class="font-bold text-xl text-indigo-600">${score}</span>
+                        <span class="font-bold text-xl text-indigo-600 dark:text-indigo-400">${score}</span>
                     </li>
                 `;
             }).join('');
@@ -996,6 +1032,19 @@
             renderParticipants(currentParticipants, currentEvent);
         });
 
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            themeToggle.checked = true;
+        }
+        themeToggle.addEventListener('change', () => {
+            if (themeToggle.checked) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
         function enablePrintButtons() {
             printHousePointsBtn.disabled = false;
             printHousePointsBtn.textContent = 'Print Points';
@@ -1004,9 +1053,8 @@
         }
 
         async function init() {
-            // This interval will check for the PDF libraries and enable the print buttons when they are ready.
             const pdfLibraryCheck = setInterval(() => {
-                if (typeof window.jspdf !== 'undefined' && typeof window.jspdf.jsPDF !== 'undefined' && typeof window.jspdf.autoTable !== 'undefined') {
+                if (window.pdfLibrariesLoaded) {
                     enablePrintButtons();
                     clearInterval(pdfLibraryCheck);
                 }
