@@ -522,7 +522,6 @@
             meets.forEach(meet => {
                 const card = document.createElement('div');
                 card.className = 'bg-white dark:bg-slate-800 p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer';
-                card.dataset.id = meet.id;
                 card.innerHTML = `<h3 class="text-xl font-bold text-slate-800 dark:text-slate-200 truncate">${meet.name}</h3>`;
                 card.addEventListener('click', () => {
                     currentMeetId = meet.id;
@@ -567,7 +566,6 @@
             events.forEach(event => {
                 const card = document.createElement('div');
                 card.className = 'bg-white dark:bg-slate-800 p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer';
-                card.dataset.id = event.id;
                 card.innerHTML = `<h3 class="text-xl font-bold text-slate-800 dark:text-slate-200 truncate">${event.name}</h3><p class="text-slate-500 dark:text-slate-400 capitalize">${event.type} Event</p>`;
                 card.addEventListener('click', () => {
                     currentEventId = event.id;
