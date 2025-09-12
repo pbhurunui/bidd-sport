@@ -75,7 +75,7 @@
                 </div>
                 <div>
                     <h1 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">BIDD SPORTS</h1>
-                    <p class="text-slate-600 dark:text-slate-400 mt-1">Your official tool for managing athletics meets.</p>
+                    <p class="text-slate-600 dark:text-slate-400 mt-1">Your official tool for managing sports competitions.</p>
                 </div>
             </div>
             <!-- Dark Mode Toggle -->
@@ -98,18 +98,18 @@
              <!-- Meets View -->
             <div id="meetsView">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-semibold text-slate-800 dark:text-slate-200">Meets</h2>
+                    <h2 class="text-2xl font-semibold text-slate-800 dark:text-slate-200">Competitions</h2>
                     <button id="addMeetBtn" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-indigo-700 transition duration-200">
-                        + Add Meet
+                        + Add Competition
                     </button>
                 </div>
-                 <p class="text-slate-500 dark:text-slate-400 mb-4 -mt-2">Select a meet to view its events or create a new one.</p>
+                 <p class="text-slate-500 dark:text-slate-400 mb-4 -mt-2">Select a competition to view its events or create a new one.</p>
                 <div id="meetsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- Meet cards will be inserted here -->
                 </div>
                  <div id="noMeetsMessage" class="hidden text-center py-16 bg-white dark:bg-slate-800 rounded-lg shadow-sm">
-                    <h3 class="text-xl font-medium text-slate-700 dark:text-slate-300">No meets yet!</h3>
-                    <p class="text-slate-500 dark:text-slate-400 mt-2">Click the "+ Add Meet" button to get started.</p>
+                    <h3 class="text-xl font-medium text-slate-700 dark:text-slate-300">No competitions yet!</h3>
+                    <p class="text-slate-500 dark:text-slate-400 mt-2">Click the "+ Add Competition" button to get started.</p>
                 </div>
             </div>
             
@@ -117,17 +117,17 @@
             <div id="eventsView" class="hidden">
                  <div class="mb-4">
                      <button id="backToMeetsBtn" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium transition duration-200">
-                        &larr; Back to Meets
+                        &larr; Back to Competitions
                     </button>
                 </div>
                 <div id="housePointsContainer" class="mb-8 bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg">
                     <div class="flex justify-between items-center mb-2">
-                        <h2 id="housePointsTitle" class="text-2xl font-semibold text-slate-800 dark:text-slate-200">House Points</h2>
+                        <h2 id="housePointsTitle" class="text-2xl font-semibold text-slate-800 dark:text-slate-200">Team Points</h2>
                         <button id="printHousePointsBtn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
                             Loading...
                         </button>
                     </div>
-                     <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Placing: 1st (5), 2nd (3), 3rd (1). Participation: 1 point per athlete.</p>
+                     <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Placing: 1st (5), 2nd (3), 3rd (1). Participation: 1 point per participant with a result or checkbox ticked.</p>
                     <ol id="housePointsList" class="space-y-3">
                         <!-- House points will be dynamically inserted here -->
                     </ol>
@@ -139,7 +139,7 @@
                         + Add Event
                     </button>
                 </div>
-                 <p class="text-slate-500 dark:text-slate-400 mb-4 -mt-2">Click on an event to view results, or add a new event for this meet.</p>
+                 <p class="text-slate-500 dark:text-slate-400 mb-4 -mt-2">Click on an event to view results, or add a new event for this competition.</p>
                 <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- Event cards will be inserted here -->
                 </div>
@@ -175,7 +175,7 @@
                             </button>
                         </div>
                     </div>
-                     <p class="text-slate-500 dark:text-slate-400 mb-4 -mt-2">Add participants manually or upload a CSV. Click actions to add/edit results or athlete details.</p>
+                     <p class="text-slate-500 dark:text-slate-400 mb-4 -mt-2">Add participants manually or upload a CSV. Click actions to add/edit results or participant details.</p>
                     <div id="resultsContainer" class="overflow-x-auto">
                         <table class="w-full text-left min-w-[600px]">
                             <thead class="bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600">
@@ -183,13 +183,13 @@
                                     <th class="p-3 font-semibold text-sm text-slate-600 dark:text-slate-300">Placing</th>
                                     <th class="p-3 font-semibold text-sm">
                                         <button id="sortByNameBtn" class="flex items-center gap-1 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                                            Athlete Name
+                                            Participant Name
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                               <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 12l-4-4m4 4l4-4m6-4v12m0-12l4 4m-4-4l-4 4" />
                                             </svg>
                                         </button>
                                     </th>
-                                    <th class="p-3 font-semibold text-sm text-slate-600 dark:text-slate-300">House</th>
+                                    <th class="p-3 font-semibold text-sm text-slate-600 dark:text-slate-300">Team/House</th>
                                     <th class="p-3 font-semibold text-sm text-slate-600 dark:text-slate-300">Participated</th>
                                     <th class="p-3 font-semibold text-sm text-slate-600 dark:text-slate-300">Result</th>
                                     <th class="p-3 font-semibold text-sm text-slate-600 dark:text-slate-300">Actions</th>
@@ -217,15 +217,15 @@
     <!-- Modals -->
     <dialog id="addMeetModal" class="modal p-0 rounded-lg shadow-xl max-w-md w-full">
         <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg">
-            <h3 class="text-xl font-bold mb-4 dark:text-white">Add New Meet</h3>
+            <h3 class="text-xl font-bold mb-4 dark:text-white">Add New Competition</h3>
             <form id="addMeetForm">
                 <div class="mb-6">
-                    <label for="meetName" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Meet Name</label>
-                    <input type="text" id="meetName" name="meetName" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" placeholder="e.g., Annual Athletics 2025" required>
+                    <label for="meetName" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Competition Name</label>
+                    <input type="text" id="meetName" name="meetName" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" placeholder="e.g., Annual Sports Day 2025" required>
                 </div>
                 <div class="flex justify-end gap-3">
                     <button type="button" class="cancel-btn bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition">Cancel</button>
-                    <button type="submit" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Create Meet</button>
+                    <button type="submit" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Create Competition</button>
                 </div>
             </form>
         </div>
@@ -237,19 +237,18 @@
             <form id="addEventForm">
                 <div class="mb-4">
                     <label for="eventName" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Event Name</label>
-                    <input type="text" id="eventName" name="eventName" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" placeholder="e.g., Boys U12 100m Sprint" required>
+                    <input type="text" id="eventName" name="eventName" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" placeholder="e.g., 100m Sprint" required>
                 </div>
                 <div class="mb-4">
-                    <label for="eventType" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Event Type</label>
-                    <select id="eventType" name="eventType" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" required>
-                        <option value="track">Track (lower time is better)</option>
-                        <option value="field">Field (higher score is better)</option>
-                        <option value="swimming">Swimming (lower time is better)</option>
+                    <label for="scoringMethod" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Scoring Method</label>
+                    <select id="scoringMethod" name="scoringMethod" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" required>
+                        <option value="low-wins">Lowest score wins (e.g., time)</option>
+                        <option value="high-wins">Highest score wins (e.g., points)</option>
                     </select>
                 </div>
                  <div class="mb-4">
                     <label for="eventUnits" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Units</label>
-                    <input type="text" id="eventUnits" name="eventUnits" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" placeholder="e.g., s, m, cm" required>
+                    <input type="text" id="eventUnits" name="eventUnits" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" placeholder="e.g., s, m, points" required>
                 </div>
                 <div class="grid grid-cols-3 gap-4 mb-6">
                     <div class="col-span-1">
@@ -278,11 +277,11 @@
             <h3 class="text-xl font-bold mb-4 dark:text-white">Add Participant</h3>
             <form id="addParticipantForm">
                 <div class="mb-4">
-                    <label for="athleteName" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Athlete Name</label>
+                    <label for="athleteName" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Participant Name</label>
                     <input type="text" id="athleteName" name="athleteName" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" required>
                 </div>
                 <div class="mb-6">
-                    <label for="houseGroup" class="block text-sm font-medium text-slate-700 dark:text-slate-300">House Group</label>
+                    <label for="houseGroup" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Team / House</label>
                     <select id="houseGroup" name="houseGroup" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" required>
                         <option value="Mason">Mason</option>
                         <option value="Sheppard">Sheppard</option>
@@ -304,11 +303,11 @@
             <form id="editParticipantForm">
                 <input type="hidden" id="editParticipantId" name="participantId">
                 <div class="mb-4">
-                    <label for="editAthleteName" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Athlete Name</label>
+                    <label for="editAthleteName" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Participant Name</label>
                     <input type="text" id="editAthleteName" name="athleteName" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" required>
                 </div>
                 <div class="mb-6">
-                    <label for="editHouseGroup" class="block text-sm font-medium text-slate-700 dark:text-slate-300">House Group</label>
+                    <label for="editHouseGroup" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Team / House</label>
                     <select id="editHouseGroup" name="houseGroup" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" required>
                         <option value="Mason">Mason</option>
                         <option value="Sheppard">Sheppard</option>
@@ -356,7 +355,7 @@
                     <select id="csvSurname" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm"></select>
                 </div>
                 <div>
-                    <label for="csvHouseGroup" class="block text-sm font-medium text-slate-700 dark:text-slate-300">House Group Column</label>
+                    <label for="csvHouseGroup" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Team / House Column</label>
                     <select id="csvHouseGroup" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm"></select>
                 </div>
             </div>
@@ -520,7 +519,7 @@
         }
 
         function isTimeBased(type) {
-            return type === 'track' || type === 'swimming';
+            return type === 'low-wins';
         }
 
         // --- MEET FUNCTIONS ---
@@ -534,7 +533,7 @@
                 card.addEventListener('click', () => {
                     currentMeetId = meet.id;
                     currentMeetName = meet.name;
-                    housePointsTitle.textContent = `House Points: ${meet.name}`;
+                    housePointsTitle.textContent = `Team Points: ${meet.name}`;
                     eventsTitle.textContent = `Events: ${meet.name}`;
                     showView('events');
                     fetchEvents(meet.id);
@@ -574,7 +573,7 @@
             events.forEach(event => {
                 const card = document.createElement('div');
                 card.className = 'bg-white dark:bg-slate-800 p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer';
-                card.innerHTML = `<h3 class="text-xl font-bold text-slate-800 dark:text-slate-200 truncate">${event.name}</h3><p class="text-slate-500 dark:text-slate-400 capitalize">${event.type} Event</p>`;
+                card.innerHTML = `<h3 class="text-xl font-bold text-slate-800 dark:text-slate-200 truncate">${event.name}</h3><p class="text-slate-500 dark:text-slate-400 capitalize">${event.scoringMethod === 'low-wins' ? 'Time-based' : 'Score-based'} Event</p>`;
                 card.addEventListener('click', () => {
                     currentEventId = event.id;
                     currentEventName = event.name;
@@ -583,8 +582,8 @@
                     resultsEventName.textContent = event.name;
                     let recordText = '';
                     if (event.record) {
-                        const formattedRecord = isTimeBased(event.type) ? formatTime(event.record) : event.record;
-                        recordText = `Record: ${formattedRecord}${!isTimeBased(event.type) ? event.units || '' : 's'}`;
+                        const formattedRecord = isTimeBased(event.scoringMethod) ? formatTime(event.record) + 's' : event.record;
+                        recordText = `Record: ${formattedRecord}${!isTimeBased(event.scoringMethod) ? event.units || '' : ''}`;
                         if (event.recordHolder) {
                             recordText += ` (${event.recordHolder}`;
                             if (event.recordYear) {
@@ -617,7 +616,7 @@
             const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events');
             const dataBuilder = fd => ({ 
                 name: fd.get('eventName'), 
-                type: fd.get('eventType'), 
+                scoringMethod: fd.get('scoringMethod'), 
                 units: fd.get('eventUnits'),
                 record: parseFloat(fd.get('eventRecord')) || null,
                 recordHolder: fd.get('recordHolder') || null,
@@ -629,18 +628,18 @@
         // --- PARTICIPANT/RESULT FUNCTIONS ---
         function renderParticipants(participants, event) {
             currentParticipants = participants; // Store for re-sorting
-            const eventType = event.type;
+            const scoringMethod = event.scoringMethod;
             const eventRecord = event.record;
             
             const withResults = participants.filter(p => p.result !== null && p.result !== undefined);
             const withoutResults = participants.filter(p => p.result === null || p.result === undefined);
             
-            withResults.sort((a, b) => isTimeBased(eventType) ? a.result - b.result : b.result - a.result);
+            withResults.sort((a, b) => isTimeBased(scoringMethod) ? a.result - b.result : b.result - a.result);
             
             if (withResults.length > 0) {
                  withResults.forEach(p => p.isRecord = false);
                 const topResult = withResults[0].result;
-                let isNewRecord = (eventRecord !== null && ((isTimeBased(eventType) && topResult < eventRecord) || (eventType === 'field' && topResult > eventRecord))) || (eventRecord === null && topResult !== null);
+                let isNewRecord = (eventRecord !== null && ((isTimeBased(scoringMethod) && topResult < eventRecord) || (!isTimeBased(scoringMethod) && topResult > eventRecord))) || (eventRecord === null && topResult !== null);
                 if (isNewRecord) {
                     withResults.forEach(p => { if(p.result === topResult) p.isRecord = true; });
                 }
@@ -670,15 +669,15 @@
             resultsContainer.querySelector('table').classList.toggle('hidden', !hasParticipants);
             
             displayList.forEach(p => {
-                const row = createParticipantRow(p, p.placing || '-', eventType);
+                const row = createParticipantRow(p, p.placing || '-', scoringMethod);
                 resultsTableBody.appendChild(row);
             });
         }
-        function createParticipantRow(participant, rank, eventType) {
+        function createParticipantRow(participant, rank, scoringMethod) {
             const row = document.createElement('tr');
             row.className = 'border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50';
             const hasResult = participant.result !== null && participant.result !== undefined;
-            let displayResult = hasResult ? (isTimeBased(eventType) ? formatTime(participant.result) : participant.result) : 'N/A';
+            let displayResult = hasResult ? (isTimeBased(scoringMethod) ? formatTime(participant.result) : participant.result) : 'N/A';
             
             if (participant.isRecord) {
                 displayResult += ` <span class="ml-2 text-amber-500 font-bold">🏆 New Record!</span>`;
@@ -712,7 +711,7 @@
             const editButton = document.createElement('button');
             editButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>`;
             editButton.className = 'text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition';
-            editButton.title = "Edit Athlete";
+            editButton.title = "Edit Participant";
             editButton.addEventListener('click', () => {
                 editParticipantIdInput.value = participant.id;
                 editAthleteNameInput.value = participant.athleteName;
@@ -819,9 +818,9 @@
                 const withResults = participants.filter(p => p.result !== null && p.result !== undefined);
                 
                 if (withResults.length > 0) {
-                    withResults.sort((a, b) => isTimeBased(currentEvent.type) ? a.result - b.result : b.result - a.result);
+                    withResults.sort((a, b) => isTimeBased(currentEvent.scoringMethod) ? a.result - b.result : b.result - a.result);
                     const topResult = withResults[0].result;
-                    const isNewRecord = (currentEvent.record && ((isTimeBased(currentEvent.type) && topResult < currentEvent.record) || (currentEvent.type === 'field' && topResult > currentEvent.record))) || (!currentEvent.record && topResult !== null);
+                    const isNewRecord = (currentEvent.record && ((isTimeBased(currentEvent.scoringMethod) && topResult < currentEvent.record) || (!isTimeBased(currentEvent.scoringMethod) && topResult > currentEvent.record))) || (!currentEvent.record && topResult !== null);
                     
                     if (isNewRecord) {
                         const recordBreaker = withResults.find(p => p.result === topResult);
@@ -929,7 +928,7 @@
                 const participants = resultsSnapshot.docs.map(d => d.data());
                 
                 participants.forEach(p => {
-                    if (p.participated && housePoints.hasOwnProperty(p.houseGroup)) {
+                    if ((p.participated || (p.result !== null && p.result !== undefined)) && housePoints.hasOwnProperty(p.houseGroup)) {
                         housePoints[p.houseGroup] += participationPoint;
                     }
                 });
@@ -937,7 +936,7 @@
                 const withResults = participants.filter(p => p.result !== null && p.result !== undefined);
                 if(withResults.length === 0) continue;
 
-                withResults.sort((a, b) => isTimeBased(event.type) ? a.result - b.result : b.result - a.result);
+                withResults.sort((a, b) => isTimeBased(event.scoringMethod) ? a.result - b.result : b.result - a.result);
                 
                 if (withResults.length > 0) {
                     withResults[0].placing = 1;
@@ -976,22 +975,26 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             doc.text(`Results for: ${currentEventName}`, 14, 16);
-            doc.text(`Meet: ${currentMeetName}`, 14, 22);
+            doc.text(`Competition: ${currentMeetName}`, 14, 22);
             
             const tableData = [];
             const rows = resultsTableBody.querySelectorAll('tr');
             rows.forEach(row => {
                 const rowData = [];
                 row.querySelectorAll('td').forEach((cell, index) => {
-                    if (index < 5) { // Include up to Result column
-                        rowData.push(cell.innerText);
+                    if (index < 5) { 
+                        if (index === 3) { // Participation column
+                           rowData.push(cell.querySelector('input').checked ? 'Yes' : 'No');
+                        } else {
+                           rowData.push(cell.innerText);
+                        }
                     }
                 });
                 tableData.push(rowData);
             });
 
             doc.autoTable({
-                head: [['Placing', 'Athlete Name', 'House', 'Participated', 'Result']],
+                head: [['Placing', 'Participant Name', 'Team/House', 'Participated', 'Result']],
                 body: tableData,
                 startY: 30
             });
@@ -1001,8 +1004,8 @@
         function generateHousePointsPdf() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            doc.text(`House Points Summary`, 14, 16);
-             doc.text(`Meet: ${currentMeetName}`, 14, 22);
+            doc.text(`Team Points Summary`, 14, 16);
+             doc.text(`Competition: ${currentMeetName}`, 14, 22);
 
             const tableData = [];
             const items = housePointsList.querySelectorAll('li');
@@ -1013,7 +1016,7 @@
             });
 
             doc.autoTable({
-                head: [['House', 'Total Points']],
+                head: [['Team/House', 'Total Points']],
                 body: tableData,
                 startY: 30
             });
@@ -1078,6 +1081,7 @@
         }
 
         async function init() {
+            console.log("BIDD SPORTS v1.6 Loaded");
             const pdfLibraryCheck = setInterval(() => {
                 if (window.pdfLibrariesLoaded) {
                     enablePrintButtons();
