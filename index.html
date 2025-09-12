@@ -161,7 +161,14 @@
                             <thead class="bg-slate-50 border-b border-slate-200">
                                 <tr>
                                     <th class="p-3 font-semibold text-sm">Placing</th>
-                                    <th class="p-3 font-semibold text-sm">Athlete Name</th>
+                                    <th class="p-3 font-semibold text-sm">
+                                        <button id="sortByNameBtn" class="flex items-center gap-1 hover:text-indigo-600 transition-colors">
+                                            Athlete Name
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 12l-4-4m4 4l4-4m6-4v12m0-12l4 4m-4-4l-4 4" />
+                                            </svg>
+                                        </button>
+                                    </th>
                                     <th class="p-3 font-semibold text-sm">House</th>
                                     <th class="p-3 font-semibold text-sm">Result</th>
                                     <th class="p-3 font-semibold text-sm">Actions</th>
@@ -258,6 +265,32 @@
             </form>
         </div>
     </dialog>
+
+    <dialog id="editParticipantModal" class="modal p-0 rounded-lg shadow-xl max-w-md w-full">
+        <div class="modal-content bg-white p-6 rounded-lg">
+            <h3 class="text-xl font-bold mb-4">Edit Participant</h3>
+            <form id="editParticipantForm">
+                <input type="hidden" id="editParticipantId" name="participantId">
+                <div class="mb-4">
+                    <label for="editAthleteName" class="block text-sm font-medium text-slate-700">Athlete Name</label>
+                    <input type="text" id="editAthleteName" name="athleteName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                </div>
+                <div class="mb-6">
+                    <label for="editHouseGroup" class="block text-sm font-medium text-slate-700">House Group</label>
+                    <select id="editHouseGroup" name="houseGroup" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                        <option value="Mason">Mason</option>
+                        <option value="Sheppard">Sheppard</option>
+                        <option value="Sumner">Sumner</option>
+                        <option value="Taylor">Taylor</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
+                    <button type="submit" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
     
     <dialog id="editResultModal" class="modal p-0 rounded-lg shadow-xl max-w-md w-full">
         <div class="modal-content bg-white p-6 rounded-lg">
@@ -335,7 +368,6 @@
             deleteDoc,
             writeBatch,
             getDocs,
-            getDoc,
             enableIndexedDbPersistence
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
@@ -362,6 +394,8 @@
         let currentMeetName = '';
         let currentEventName = '';
         let currentEvent = null;
+        let currentParticipants = [];
+        let currentSortOrder = 'placing'; // 'placing' or 'alphabetical'
 
         let meetsUnsubscribe = null;
         let eventsUnsubscribe = null;
@@ -404,6 +438,12 @@
         const addParticipantBtn = document.getElementById('addParticipantBtn');
         const addParticipantModal = document.getElementById('addParticipantModal');
         const addParticipantForm = document.getElementById('addParticipantForm');
+        
+        const editParticipantModal = document.getElementById('editParticipantModal');
+        const editParticipantForm = document.getElementById('editParticipantForm');
+        const editParticipantIdInput = document.getElementById('editParticipantId');
+        const editAthleteNameInput = document.getElementById('editAthleteName');
+        const editHouseGroupSelect = document.getElementById('editHouseGroup');
 
         const editResultModal = document.getElementById('editResultModal');
         const editResultForm = document.getElementById('editResultForm');
@@ -429,6 +469,7 @@
         const eventsTitle = document.getElementById('eventsTitle');
         const printHousePointsBtn = document.getElementById('printHousePointsBtn');
         const printResultsBtn = document.getElementById('printResultsBtn');
+        const sortByNameBtn = document.getElementById('sortByNameBtn');
 
         function showView(view) {
             meetsView.classList.toggle('hidden', view !== 'meets');
@@ -503,8 +544,10 @@
                     currentEventId = event.id;
                     currentEventName = event.name;
                     currentEvent = event;
+                    currentSortOrder = 'placing'; // Reset sort order when viewing an event
                     resultsEventName.textContent = event.name;
-                    resultsEventInfo.textContent = `Results in ${event.units}. ${event.record ? `Record: ${event.record}${event.units}` : ''}`;
+                    let recordText = event.record ? `Record: ${event.type === 'track' ? formatTime(event.record) : event.record}${event.units}` : '';
+                    resultsEventInfo.textContent = `Results in ${event.units}. ${recordText}`;
                     showView('results');
                     fetchResults(currentMeetId, event.id, event);
                 });
@@ -537,24 +580,23 @@
 
         // --- PARTICIPANT/RESULT FUNCTIONS ---
         function renderParticipants(participants, event) {
+            currentParticipants = participants; // Store for re-sorting
             const eventType = event.type;
             const eventRecord = event.record;
+            
             const withResults = participants.filter(p => p.result !== null && p.result !== undefined);
             const withoutResults = participants.filter(p => p.result === null || p.result === undefined);
+            
             withResults.sort((a, b) => eventType === 'track' ? a.result - b.result : b.result - a.result);
             
-            let isNewRecord = false;
-
             if (withResults.length > 0) {
-                withResults[0].placing = 1;
-                 // Check for new record
-                if(eventRecord) {
-                    const topResult = withResults[0].result;
-                    if(eventType === 'track' && topResult < eventRecord) isNewRecord = true;
-                    if(eventType === 'field' && topResult > eventRecord) isNewRecord = true;
+                 withResults.forEach(p => p.isRecord = false);
+                const topResult = withResults[0].result;
+                let isNewRecord = (eventRecord !== null && ((eventType === 'track' && topResult < eventRecord) || (eventType === 'field' && topResult > eventRecord))) || (eventRecord === null && topResult !== null);
+                if (isNewRecord) {
+                    withResults.forEach(p => { if(p.result === topResult) p.isRecord = true; });
                 }
-                if(isNewRecord) withResults[0].isRecord = true;
-
+                withResults[0].placing = 1;
                 for (let i = 1; i < withResults.length; i++) {
                     if (withResults[i].result === withResults[i - 1].result) {
                         withResults[i].placing = withResults[i - 1].placing;
@@ -563,11 +605,23 @@
                     }
                 }
             }
+
+            let displayList = [...withResults, ...withoutResults];
+
+            if (currentSortOrder === 'alphabetical') {
+                displayList.sort((a, b) => {
+                    const surnameA = (a.athleteName.split(' ').pop() || '').toLowerCase();
+                    const surnameB = (b.athleteName.split(' ').pop() || '').toLowerCase();
+                    return surnameA.localeCompare(surnameB);
+                });
+            }
+
             resultsTableBody.innerHTML = '';
             const hasParticipants = participants.length > 0;
             noParticipantsMessage.classList.toggle('hidden', hasParticipants);
             resultsContainer.querySelector('table').classList.toggle('hidden', !hasParticipants);
-            [...withResults, ...withoutResults].forEach(p => {
+            
+            displayList.forEach(p => {
                 const row = createParticipantRow(p, p.placing || '-', eventType);
                 resultsTableBody.appendChild(row);
             });
@@ -586,16 +640,33 @@
             const houseBadge = `<span class="px-2 py-1 text-xs font-semibold leading-tight rounded-full ${houseColor.bg} ${houseColor.text}">${participant.houseGroup}</span>`;
             
             row.innerHTML = `<td class="p-3 font-medium">${rank}</td><td class="p-3">${participant.athleteName}</td><td class="p-3">${houseBadge}</td><td class="p-3">${displayResult}</td><td class="p-3"></td>`;
-            const actionButton = document.createElement('button');
-            actionButton.textContent = hasResult ? 'Edit Result' : 'Add Result';
-            actionButton.className = hasResult ? 'bg-yellow-500 text-white font-semibold px-3 py-1 text-sm rounded-md shadow hover:bg-yellow-600 transition' : 'bg-indigo-500 text-white font-semibold px-3 py-1 text-sm rounded-md shadow hover:bg-indigo-600 transition';
-            actionButton.addEventListener('click', () => {
+            
+            const actionsCell = row.cells[4];
+            actionsCell.className = 'p-3 flex items-center gap-2';
+            
+            const resultButton = document.createElement('button');
+            resultButton.textContent = hasResult ? 'Edit Result' : 'Add Result';
+            resultButton.className = hasResult ? 'bg-yellow-500 text-white font-semibold px-3 py-1 text-sm rounded-md shadow hover:bg-yellow-600 transition' : 'bg-indigo-500 text-white font-semibold px-3 py-1 text-sm rounded-md shadow hover:bg-indigo-600 transition';
+            resultButton.addEventListener('click', () => {
                 editResultAthleteName.textContent = participant.athleteName;
                 editResultParticipantId.value = participant.id;
                 editResultForm.resultValue.value = participant.result || '';
                 editResultModal.showModal();
             });
-            row.cells[4].appendChild(actionButton);
+            actionsCell.appendChild(resultButton);
+
+            const editButton = document.createElement('button');
+            editButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>`;
+            editButton.className = 'text-slate-500 hover:text-indigo-600 transition';
+            editButton.title = "Edit Athlete";
+            editButton.addEventListener('click', () => {
+                editParticipantIdInput.value = participant.id;
+                editAthleteNameInput.value = participant.athleteName;
+                editHouseGroupSelect.value = participant.houseGroup;
+                editParticipantModal.showModal();
+            });
+            actionsCell.appendChild(editButton);
+
             return row;
         }
         async function fetchResults(meetId, eventId, event) {
@@ -625,6 +696,27 @@
                 console.error("Error adding document: ", error);
             }
         }
+
+        async function handleUpdateParticipant(e) {
+            e.preventDefault();
+            const participantId = editParticipantIdInput.value;
+            const newName = editAthleteNameInput.value;
+            const newHouse = editHouseGroupSelect.value;
+
+            if (!currentMeetId || !currentEventId || !participantId) return;
+            try {
+                const participantDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId, 'results', participantId);
+                await updateDoc(participantDocRef, { 
+                    athleteName: newName,
+                    houseGroup: newHouse
+                });
+                editParticipantForm.reset();
+                editParticipantModal.close();
+            } catch (error) {
+                console.error("Error updating participant:", error);
+            }
+        }
+
         async function handleUpdateResult(e) {
             e.preventDefault();
             const participantId = editResultParticipantId.value;
@@ -634,7 +726,6 @@
                 const participantDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId, 'results', participantId);
                 await updateDoc(participantDocRef, { result: resultValue });
 
-                // Check for and update new record
                 const eventDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId);
                 const resultsColRef = collection(eventDocRef, 'results');
                 const resultsSnapshot = await getDocs(resultsColRef);
@@ -644,9 +735,10 @@
                 if (withResults.length > 0) {
                     withResults.sort((a, b) => currentEvent.type === 'track' ? a.result - b.result : b.result - a.result);
                     const topResult = withResults[0].result;
-                    const isNewRecord = (currentEvent.type === 'track' && topResult < currentEvent.record) || 
-                                      (currentEvent.type === 'field' && topResult > currentEvent.record) ||
-                                      (currentEvent.record === null && topResult !== null);
+                    const isNewRecord = (currentEvent.record && (
+                                          (currentEvent.type === 'track' && topResult < currentEvent.record) || 
+                                          (currentEvent.type === 'field' && topResult > currentEvent.record)
+                                      )) || (!currentEvent.record && topResult !== null);
                     if (isNewRecord) {
                         await updateDoc(eventDocRef, { record: topResult });
                     }
@@ -852,6 +944,7 @@
         addEventBtn.addEventListener('click', () => addEventModal.showModal());
         addParticipantBtn.addEventListener('click', () => addParticipantModal.showModal());
         editResultForm.addEventListener('submit', handleUpdateResult);
+        editParticipantForm.addEventListener('submit', handleUpdateParticipant);
         
         backToMeetsBtn.addEventListener('click', () => {
              if (eventsUnsubscribe) { eventsUnsubscribe(); eventsUnsubscribe = null; }
@@ -877,6 +970,11 @@
         
         printHousePointsBtn.addEventListener('click', generateHousePointsPdf);
         printResultsBtn.addEventListener('click', generateResultsPdf);
+        
+        sortByNameBtn.addEventListener('click', () => {
+            currentSortOrder = currentSortOrder === 'placing' ? 'alphabetical' : 'placing';
+            renderParticipants(currentParticipants, currentEvent);
+        });
 
         async function init() {
             if (!firebaseConfig || !firebaseConfig.apiKey) {
