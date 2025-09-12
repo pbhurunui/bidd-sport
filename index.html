@@ -651,6 +651,7 @@
         const addEventForm = document.getElementById('addEventForm');
         const editEventModal = document.getElementById('editEventModal');
         const editEventForm = document.getElementById('editEventForm');
+        const eventSearchInput = document.getElementById('eventSearchInput');
         
         const shareLinkBtn = document.getElementById('shareLinkBtn');
         const shareLinkModal = document.getElementById('shareLinkModal');
@@ -784,6 +785,7 @@
         });
 
         // --- EVENT FUNCTIONS ---
+        let allEvents = [];
         function renderEvents(events) {
             eventsGrid.innerHTML = '';
             noEventsMessage.classList.toggle('hidden', events.length > 0);
@@ -857,8 +859,8 @@
             if (eventsUnsubscribe) eventsUnsubscribe();
             const eventsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', meetId, 'events');
             eventsUnsubscribe = onSnapshot(query(eventsCol), snapshot => {
-                const events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderEvents(events);
+                allEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderEvents(allEvents);
             }, error => {
                 console.error("Firestore Error fetching events:", error);
             });
