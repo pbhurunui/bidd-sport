@@ -1280,17 +1280,18 @@
                 for (const row of parsedCsvData.data) {
                     const firstName = row[firstNameColumn];
                     const surname = row[surnameColumn];
-                    const gender = row[genderColumn];
+                    const genderRaw = row[genderColumn];
                     const ageGroup = row[ageGroupColumn];
                     const houseGroup = row[houseColumn];
 
-                    if (firstName && surname && houseGroup && gender && ageGroup) {
+                    if (firstName && surname && houseGroup && genderRaw && ageGroup) {
                         const athleteName = `${firstName.trim()} ${surname.trim()}`;
+                        const gender = genderRaw.trim().toLowerCase().startsWith('m') ? 'Male' : 'Female';
                         const matchingEventIds = eventsByAgeGroup[ageGroup.trim()] || [];
                         
                         for (const eventId of matchingEventIds) {
                             const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', eventId, 'results');
-                            batch.set(doc(resultsCol), { athleteName, houseGroup: houseGroup.trim(), gender: gender.trim(), result: null, participated: false, createdAt: new Date() });
+                            batch.set(doc(resultsCol), { athleteName, houseGroup: houseGroup.trim(), gender: gender, result: null, participated: false, createdAt: new Date() });
                         }
                         count++;
                     }
