@@ -693,7 +693,7 @@
                 showView('meets');
             }, error => {
                 console.error("Firestore Error fetching meets:", error);
-                loadingMessage.innerHTML = '<strong>Error:</strong> Could not fetch data. Please verify your Firestore security rules.';
+                loadingMessage.innerHTML = `<strong>Error:</strong> Could not fetch data. Please check your Firestore security rules. <br><small>${error.message}</small>`;
             });
         }
         addMeetForm.addEventListener('submit', (e) => {
@@ -1355,16 +1355,6 @@
             renderParticipants(currentParticipants, currentEvent);
         });
 
-        themeToggle.addEventListener('change', () => {
-            if (themeToggle.checked) {
-                document.documentElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-            }
-        });
-
         function enablePrintButtons() {
             printHousePointsBtn.disabled = false;
             printHousePointsBtn.textContent = 'Print Points';
@@ -1406,7 +1396,7 @@
                     } else {
                         signInAnonymously(auth).catch((error) => {
                              console.error("Anonymous sign-in failed:", error);
-                             loadingMessage.textContent = 'Error: Could not authenticate. Please check your connection and browser settings.';
+                             loadingMessage.innerHTML = `<strong>Authentication Failed.</strong><br>Please check your Firebase Authentication settings and browser console for errors.<br><small>${error.message}</small>`;
                              loadingEl.querySelector('.loader').classList.add('hidden');
                         });
                     }
@@ -1415,7 +1405,7 @@
                 await enableIndexedDbPersistence(db).catch(err => console.warn("Offline persistence not available:", err.code));
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
-                loadingMessage.textContent = 'Error: Could not connect to the database. Check console for details and verify Firebase settings.';
+                loadingMessage.innerHTML = `<strong>Connection Error.</strong><br>Could not connect to the database. Please check your Firebase project settings and console for details.<br><small>${error.message}</small>`;
                 loadingEl.querySelector('.loader').classList.add('hidden');
             }
         }
