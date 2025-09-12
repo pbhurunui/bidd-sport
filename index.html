@@ -135,9 +135,14 @@
 
                 <div class="flex justify-between items-center mb-4">
                     <h2 id="eventsTitle" class="text-2xl font-semibold text-slate-800 dark:text-slate-200">Events</h2>
-                    <button id="addEventBtn" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-indigo-700 transition duration-200">
-                        + Add Event
-                    </button>
+                    <div class="flex gap-2">
+                         <button id="shareLinkBtn" class="bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-700 transition duration-200">
+                            Share Sign-up Link
+                        </button>
+                        <button id="addEventBtn" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-indigo-700 transition duration-200">
+                            + Add Event
+                        </button>
+                    </div>
                 </div>
                  <p class="text-slate-500 dark:text-slate-400 mb-4 -mt-2">Click on an event to view results, or add a new event for this competition.</p>
                 <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -212,6 +217,20 @@
             </div>
             
         </main>
+        
+        <!-- Public Sign-up View -->
+        <div id="signupView" class="hidden">
+            <h2 id="signupCompetitionName" class="text-3xl font-bold text-slate-900 dark:text-white mb-2"></h2>
+            <p class="text-slate-500 dark:text-slate-400 mb-6">Select an event to sign up for.</p>
+            <div id="signupEventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Sign-up event cards will be inserted here -->
+            </div>
+             <div id="noSignupEventsMessage" class="hidden text-center py-16 bg-white dark:bg-slate-800 rounded-lg shadow-sm">
+                <h3 class="text-xl font-medium text-slate-700 dark:text-slate-300">No events available for sign-up.</h3>
+                <p class="text-slate-500 dark:text-slate-400 mt-2">Please check back later or contact the event organizer.</p>
+            </div>
+        </div>
+
     </div>
 
     <!-- Modals -->
@@ -383,6 +402,50 @@
             </div>
         </div>
     </dialog>
+    
+    <dialog id="shareLinkModal" class="modal p-0 rounded-lg shadow-xl max-w-lg w-full">
+        <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg">
+            <h3 class="text-xl font-bold mb-4 dark:text-white">Share Sign-up Link</h3>
+            <p class="text-slate-600 dark:text-slate-400 mb-4">Share this link with participants to allow them to sign up for events in this competition.</p>
+            <input type="text" id="shareableLink" readonly class="w-full p-2 border rounded-md bg-slate-100 dark:bg-slate-700 dark:text-white dark:border-slate-600">
+            <div class="flex justify-end gap-3 mt-4">
+                <button id="copyLinkBtn" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Copy Link</button>
+                <button type="button" class="cancel-btn bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition">Close</button>
+            </div>
+        </div>
+    </dialog>
+
+     <dialog id="publicSignupModal" class="modal p-0 rounded-lg shadow-xl max-w-md w-full">
+        <div class="modal-content bg-white dark:bg-slate-800 p-6 rounded-lg">
+            <div id="signupFormContainer">
+                <h3 id="signupEventName" class="text-xl font-bold mb-4 dark:text-white">Sign Up</h3>
+                <form id="publicSignupForm">
+                    <input type="hidden" id="signupEventId" name="eventId">
+                    <div class="mb-4">
+                        <label for="signupName" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Full Name</label>
+                        <input type="text" id="signupName" name="signupName" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="signupHouse" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Team / House</label>
+                        <select id="signupHouse" name="signupHouse" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" required>
+                            <option value="Mason">Mason</option>
+                            <option value="Sheppard">Sheppard</option>
+                            <option value="Sumner">Sumner</option>
+                            <option value="Taylor">Taylor</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end gap-3">
+                        <button type="button" class="cancel-btn bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition">Cancel</button>
+                        <button type="submit" class="bg-teal-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-teal-700 transition">Sign Up</button>
+                    </div>
+                </form>
+            </div>
+             <div id="signupMessageContainer" class="hidden text-center">
+                <p id="signupMessage" class="text-lg font-medium text-slate-800 dark:text-slate-200"></p>
+                <button type="button" class="cancel-btn mt-4 bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition">Close</button>
+            </div>
+        </div>
+    </dialog>
 
 
     <script type="module">
@@ -399,6 +462,7 @@
             deleteDoc,
             writeBatch,
             getDocs,
+            where,
             enableIndexedDbPersistence
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
@@ -458,6 +522,23 @@
         const addEventBtn = document.getElementById('addEventBtn');
         const addEventModal = document.getElementById('addEventModal');
         const addEventForm = document.getElementById('addEventForm');
+        const shareLinkBtn = document.getElementById('shareLinkBtn');
+        const shareLinkModal = document.getElementById('shareLinkModal');
+        const shareableLinkInput = document.getElementById('shareableLink');
+        const copyLinkBtn = document.getElementById('copyLinkBtn');
+
+        const signupView = document.getElementById('signupView');
+        const signupCompetitionName = document.getElementById('signupCompetitionName');
+        const signupEventsGrid = document.getElementById('signupEventsGrid');
+        const noSignupEventsMessage = document.getElementById('noSignupEventsMessage');
+        const publicSignupModal = document.getElementById('publicSignupModal');
+        const publicSignupForm = document.getElementById('publicSignupForm');
+        const signupEventName = document.getElementById('signupEventName');
+        const signupEventIdInput = document.getElementById('signupEventId');
+        const signupFormContainer = document.getElementById('signupFormContainer');
+        const signupMessageContainer = document.getElementById('signupMessageContainer');
+        const signupMessage = document.getElementById('signupMessage');
+
 
         const resultsView = document.getElementById('resultsView');
         const resultsContainer = document.getElementById('resultsContainer');
@@ -507,6 +588,7 @@
             meetsView.classList.toggle('hidden', view !== 'meets');
             eventsView.classList.toggle('hidden', view !== 'events');
             resultsView.classList.toggle('hidden', view !== 'results');
+            signupView.classList.add('hidden'); // Always hide admin views when showing public
         }
         function formatTime(seconds) {
             if (seconds === null || seconds === undefined || isNaN(seconds)) return 'N/A';
@@ -1022,6 +1104,84 @@
             });
             doc.save(`house_points_${currentMeetName.replace(/ /g, '_')}.pdf`);
         }
+        
+        // --- SIGN UP PAGE ---
+        async function fetchAndRenderSignupPage(meetId) {
+            loadingEl.classList.add('hidden');
+            mainContentEl.classList.add('hidden');
+            signupView.classList.remove('hidden');
+
+            const meetDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', meetId);
+            const meetDoc = await getDocs(meetDocRef);
+            if(meetDoc.exists()) {
+                const meetData = meetDoc.data();
+                currentMeetName = meetData.name;
+                signupCompetitionName.textContent = `Sign Up for: ${meetData.name}`;
+
+                const eventsCol = collection(meetDocRef, 'events');
+                const eventsSnapshot = await getDocs(eventsCol);
+                const events = eventsSnapshot.docs.map(d => ({id: d.id, ...d.data()}));
+                renderSignupEvents(events);
+
+            } else {
+                 noSignupEventsMessage.classList.remove('hidden');
+            }
+        }
+        
+        function renderSignupEvents(events) {
+            signupEventsGrid.innerHTML = '';
+            noSignupEventsMessage.classList.toggle('hidden', events.length > 0);
+            events.forEach(event => {
+                const card = document.createElement('div');
+                card.className = 'bg-white dark:bg-slate-800 p-5 rounded-lg shadow-md';
+                card.innerHTML = `
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-slate-200 truncate">${event.name}</h3>
+                    <p class="text-slate-500 dark:text-slate-400 capitalize">${event.scoringMethod === 'low-wins' ? 'Time-based' : 'Score-based'} Event</p>
+                    <button data-event-id="${event.id}" data-event-name="${event.name}" class="signup-btn mt-4 w-full bg-teal-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-teal-700 transition duration-200">Sign Up</button>
+                `;
+                signupEventsGrid.appendChild(card);
+            });
+
+            document.querySelectorAll('.signup-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    signupEventName.textContent = `Sign Up for: ${btn.dataset.eventName}`;
+                    signupEventIdInput.value = btn.dataset.eventId;
+                    signupFormContainer.classList.remove('hidden');
+                    signupMessageContainer.classList.add('hidden');
+                    publicSignupForm.reset();
+                    publicSignupModal.showModal();
+                });
+            });
+        }
+        
+        async function handlePublicSignup(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const eventId = formData.get('eventId');
+            const participantName = formData.get('signupName').trim();
+            const houseGroup = formData.get('signupHouse');
+            
+            const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', eventId, 'results');
+            
+            // Check for duplicates
+            const q = query(resultsCol, where("athleteName", "==", participantName));
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) {
+                signupMessage.textContent = 'You are already signed up for this event.';
+            } else {
+                await addDoc(resultsCol, {
+                    athleteName: participantName,
+                    houseGroup: houseGroup,
+                    result: null,
+                    participated: false,
+                    createdAt: new Date()
+                });
+                signupMessage.textContent = 'Successfully signed up!';
+            }
+            signupFormContainer.classList.add('hidden');
+            signupMessageContainer.classList.remove('hidden');
+        }
+
 
         // --- NAVIGATION AND INIT ---
         addMeetBtn.addEventListener('click', () => addMeetModal.showModal());
@@ -1029,6 +1189,7 @@
         addParticipantBtn.addEventListener('click', () => addParticipantModal.showModal());
         editResultForm.addEventListener('submit', handleUpdateResult);
         editParticipantForm.addEventListener('submit', handleUpdateParticipant);
+        publicSignupForm.addEventListener('submit', handlePublicSignup);
         
         backToMeetsBtn.addEventListener('click', () => {
              if (eventsUnsubscribe) { eventsUnsubscribe(); eventsUnsubscribe = null; }
@@ -1041,6 +1202,20 @@
             showView('events');
             await calculateAndRenderHousePoints(currentMeetId);
         });
+
+        shareLinkBtn.addEventListener('click', () => {
+            const url = `${window.location.origin}${window.location.pathname}?signup=${currentMeetId}`;
+            shareableLinkInput.value = url;
+            shareLinkModal.showModal();
+        });
+
+        copyLinkBtn.addEventListener('click', () => {
+            shareableLinkInput.select();
+            document.execCommand('copy');
+            copyLinkBtn.textContent = 'Copied!';
+            setTimeout(() => { copyLinkBtn.textContent = 'Copy Link'; }, 2000);
+        });
+
 
         deleteEventBtn.addEventListener('click', () => {
             deleteConfirmText.textContent = `This will permanently delete the event "${currentEventName}" and all its results. This action cannot be undone.`
@@ -1081,7 +1256,10 @@
         }
 
         async function init() {
-            console.log("BIDD SPORTS v1.6 Loaded");
+            console.log("BIDD SPORTS Initializing...");
+            const urlParams = new URLSearchParams(window.location.search);
+            const signupMeetId = urlParams.get('signup');
+
             const pdfLibraryCheck = setInterval(() => {
                 if (window.pdfLibrariesLoaded) {
                     enablePrintButtons();
@@ -1102,7 +1280,12 @@
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         userId = user.uid;
-                        await fetchMeets();
+                        if (signupMeetId) {
+                            currentMeetId = signupMeetId;
+                            await fetchAndRenderSignupPage(signupMeetId);
+                        } else {
+                            await fetchMeets();
+                        }
                     } else {
                         signInAnonymously(auth).catch((error) => {
                              console.error("Anonymous sign-in failed:", error);
