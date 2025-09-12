@@ -136,7 +136,9 @@
                     </div>
                 </div>
                  <p class="text-slate-500 mb-2 -mt-2">Click on an event to view results, or add a new event for this competition.</p>
-                
+                <div class="mb-4">
+                    <input type="search" id="eventSearchInput" placeholder="Search for an event..." class="w-full px-4 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
                 <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- Event cards will be inserted here -->
                 </div>
@@ -289,17 +291,6 @@
                     <label for="eventUnits" class="block text-sm font-medium text-slate-700">Units</label>
                     <input type="text" id="eventUnits" name="eventUnits" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" placeholder="e.g., s, m, points" required>
                 </div>
-                <div class="mb-4">
-                    <label for="eventParticipantGender" class="block text-sm font-medium text-slate-700">Pre-populate Participants</label>
-                    <select id="eventParticipantGender" name="eventParticipantGender" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
-                        <option value="All">All Genders</option>
-                        <option value="Male">Male only</option>
-                        <option value="Female">Female only</option>
-                        <option value="None">Do not pre-populate</option>
-                    </select>
-                    <p class="text-xs text-slate-500 mt-1">Choose whether to pre-fill this event with participants from the meet participants list who match the Age Group.</p>
-                </div>
-        
                 
                 <div class="space-y-4 mb-6">
                     <div>
@@ -525,11 +516,6 @@
                     <select id="csvGender" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm"></select>
                 </div>
                 <div>
-                    <label for="csvAge" class="block text-sm font-medium text-slate-700">Age Column</label>
-                    <select id="csvAge" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm"></select>
-                </div>
-
-                <div>
                     <label for="csvAgeGroup" class="block text-sm font-medium text-slate-700">Age Group Column</label>
                     <select id="csvAgeGroup" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm"></select>
                 </div>
@@ -648,39 +634,6 @@
         const appId = "bidd-sports";
         // =====================================================================================
         // ======================== END OF SETUP SECTION =======================================
-
-        // ================== AGE/GROUP CONFIGURATION ==================
-        // Change groupingMode to 'yearLevel' to use school year groups instead of age bands.
-        const groupingMode = 'age'; // 'age' or 'yearLevel'
-        const ageGroups = [
-            { label: 'U10', max: 9 },
-            { label: 'U12', max: 11 },
-            { label: 'U14', max: 13 },
-            { label: 'U16', max: 15 },
-            { label: 'Senior', max: 18 },
-            { label: 'Open', max: Infinity }
-        ];
-        const yearGroups = [
-            { label: 'Year 7', min: 11, max: 11 },
-            { label: 'Year 8', min: 12, max: 12 },
-            { label: 'Year 9', min: 13, max: 13 },
-            { label: 'Year 10', min: 14, max: 14 },
-            { label: 'Year 11', min: 15, max: 15 },
-            { label: 'Year 12', min: 16, max: 16 },
-            { label: 'Year 13', min: 17, max: 17 }
-        ];
-        function getAgeGroup(age) {
-            if (age === null || age === undefined || isNaN(age)) return 'Open';
-            if (groupingMode === 'yearLevel') {
-                const g = yearGroups.find(x => age >= x.min && age <= x.max);
-                return g ? g.label : 'Other';
-            }
-            const g = ageGroups.find(x => age <= x.max);
-            return g ? g.label : 'Open';
-        }
-        // ==============================================================
-
-
         // =====================================================================================
 
         let app, auth, db;
@@ -727,6 +680,7 @@
         const addEventForm = document.getElementById('addEventForm');
         const editEventModal = document.getElementById('editEventModal');
         const editEventForm = document.getElementById('editEventForm');
+        const eventSearchInput = document.getElementById('eventSearchInput');
         const uploadCsvEventsBtn = document.getElementById('uploadCsvEventsBtn');
         
         const shareLinkBtn = document.getElementById('shareLinkBtn');
@@ -784,7 +738,6 @@
         const csvFirstNameSelect = document.getElementById('csvFirstName');
         const csvSurnameSelect = document.getElementById('csvSurname');
         const csvGenderSelect = document.getElementById('csvGender');
-        const csvAgeSelect = document.getElementById('csvAge');
         const csvAgeGroupSelect = document.getElementById('csvAgeGroup');
         const csvHouseGroupSelect = document.getElementById('csvHouseGroup');
         const csvPreviewHead = document.getElementById('csvPreviewHead');
@@ -945,12 +898,11 @@
                 console.error("Firestore Error fetching events:", error);
             });
         }
-        
-        addEventForm.addEventListener('submit', async (e) => {
+        addEventForm.addEventListener('submit', (e) => {
             e.preventDefault();
             if(!currentMeetId) return;
-            const fd = new FormData(e.target);
-            const eventData = { 
+            const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events');
+            const dataBuilder = fd => ({ 
                 name: fd.get('eventName'), 
                 eventType: fd.get('eventType'), 
                 ageGroup: fd.get('ageGroup'),
@@ -961,34 +913,10 @@
                 femaleRecord: parseFloat(fd.get('femaleEventRecord')) || null,
                 femaleRecordHolder: fd.get('femaleRecordHolder') || null,
                 femaleRecordYear: parseInt(fd.get('femaleRecordYear')) || null
-            };
-            try {
-                const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events');
-                const eventRef = await addDoc(collectionRef, eventData);
-                // Optionally pre-populate results from meet participants
-                const genderFilter = fd.get('eventParticipantGender') || 'All';
-                if (genderFilter !== 'None') {
-                    const participantsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'participants');
-                    const qConstraints = [ where('ageGroup', '==', eventData.ageGroup) ];
-                    if (genderFilter === 'Male' || genderFilter === 'Female') qConstraints.push(where('gender', '==', genderFilter));
-                    const qParticipants = query(participantsCol, ...qConstraints);
-                    const participantsSnap = await getDocs(qParticipants);
-                    if (!participantsSnap.empty) {
-                        const batch = writeBatch(db);
-                        for (const pdoc of participantsSnap.docs) {
-                            const p = pdoc.data();
-                            const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', eventRef.id, 'results');
-                            batch.set(doc(resultsCol), { athleteName: p.athleteName, houseGroup: p.houseGroup, gender: p.gender, age: p.age || null, ageGroup: p.ageGroup || null, result: null, participated: false, importedFromParticipantId: pdoc.id, createdAt: new Date() });
-                        }
-                        await batch.commit();
-                    }
-                }
-                e.target.reset();
-                addEventModal.close();
-            } catch (error) {
-                console.error('Error creating event:', error);
-            }
+            });
+            handleFormSubmit(e, addEventModal, collectionRef, dataBuilder);
         });
+        
         async function handleUpdateEvent(e) {
             e.preventDefault();
             if(!currentMeetId) return;
@@ -1289,7 +1217,6 @@
             deleteContext = null;
         }
 
-        
         function handleFileSelect(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1299,44 +1226,39 @@
                 complete: function(results) {
                     parsedCsvData = results;
                     const headers = results.meta.fields;
-                    [csvFirstNameSelect, csvSurnameSelect, csvGenderSelect, csvAgeSelect, csvAgeGroupSelect, csvHouseGroupSelect].forEach(sel => sel.innerHTML = '');
+                    [csvFirstNameSelect, csvSurnameSelect, csvGenderSelect, csvAgeGroupSelect, csvHouseGroupSelect].forEach(sel => sel.innerHTML = '');
                     headers.forEach(header => {
-                        [csvFirstNameSelect, csvSurnameSelect, csvGenderSelect, csvAgeSelect, csvAgeGroupSelect, csvHouseGroupSelect].forEach(sel => sel.add(new Option(header, header)));
+                        [csvFirstNameSelect, csvSurnameSelect, csvGenderSelect, csvAgeGroupSelect, csvHouseGroupSelect].forEach(sel => sel.add(new Option(header, header)));
                     });
                     const lowerCaseHeaders = headers.map(h => h.toLowerCase());
                     const firstNameIndex = lowerCaseHeaders.findIndex(h => h.includes('first') || h.includes('given'));
                     const surnameIndex = lowerCaseHeaders.findIndex(h => h.includes('last') || h.includes('surname'));
                     const genderIndex = lowerCaseHeaders.findIndex(h => h.includes('gender') || h.includes('sex'));
-                    // Prefer an 'age' column for numeric age; prefer columns named 'age' but not 'age group'.
-                    const ageIndex = lowerCaseHeaders.findIndex(h => (h === 'age') || (h.includes('age') && !h.includes('group') && !h.includes('year')));
-                    const ageGroupIndex = lowerCaseHeaders.findIndex(h => h.includes('age group') || h.includes('agegroup') || h.includes('group') || h.includes('year'));
+                    const ageGroupIndex = lowerCaseHeaders.findIndex(h => h.includes('age'));
                     const houseIndex = lowerCaseHeaders.findIndex(h => h.includes('house') || h.includes('team'));
                     if (firstNameIndex > -1) csvFirstNameSelect.selectedIndex = firstNameIndex;
                     if (surnameIndex > -1) csvSurnameSelect.selectedIndex = surnameIndex;
                     if (genderIndex > -1) csvGenderSelect.selectedIndex = genderIndex;
-                    if (ageIndex > -1) csvAgeSelect.selectedIndex = ageIndex;
                     if (ageGroupIndex > -1) csvAgeGroupSelect.selectedIndex = ageGroupIndex;
                     if (houseIndex > -1) csvHouseGroupSelect.selectedIndex = houseIndex;
                     csvPreviewHead.innerHTML = `<tr>${headers.map(h => `<th class="p-2 font-semibold text-sm">${h}</th>`).join('')}</tr>`;
-                    csvPreviewBody.innerHTML = results.data.slice(0,5).map(row => `<tr class="border-t border-slate-200">${headers.map(h => `<td class="p-2 text-sm">${row[h] || ''}</td>`).join('')}</tr>`).join('');
+                    csvPreviewBody.innerHTML = results.data.slice(0, 5).map(row => `<tr class="border-t border-slate-200">${headers.map(h => `<td class="p-2 text-sm">${row[h] || ''}</td>`).join('')}</tr>`).join('');
                     csvUploadModal.showModal();
                 },
                 error: error => console.error("Error parsing CSV:", error)
             });
             csvFileInput.value = '';
         }
-    
         async function handleConfirmCsvImport() {
             if (!parsedCsvData || !currentMeetId) return;
             const firstNameColumn = csvFirstNameSelect.value;
             const surnameColumn = csvSurnameSelect.value;
             const genderColumn = csvGenderSelect.value;
-            const ageColumn = csvAgeSelect.value;
-            const ageGroupColumn = csvAgeGroupSelect.value; // optional
+            const ageGroupColumn = csvAgeGroupSelect.value;
             const houseColumn = csvHouseGroupSelect.value;
             
-            if (!firstNameColumn || !surnameColumn || !houseColumn || !genderColumn || !ageColumn) {
-                alert("Please map all columns: First Name, Surname, Gender, Age, and Team/House.");
+            if (!firstNameColumn || !surnameColumn || !houseColumn || !genderColumn || !ageGroupColumn) {
+                alert("Please map all columns: First Name, Surname, Gender, Age Group, and Team/House.");
                 return;
             }
             
@@ -1345,38 +1267,41 @@
             importBtn.textContent = 'Importing...';
 
             try {
-                const participantsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'participants');
+                const eventsSnapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events'));
+                const eventsByAgeGroup = {};
+                eventsSnapshot.docs.forEach(doc => {
+                    const event = { id: doc.id, ...doc.data() };
+                    if (!eventsByAgeGroup[event.ageGroup]) {
+                        eventsByAgeGroup[event.ageGroup] = [];
+                    }
+                    eventsByAgeGroup[event.ageGroup].push(event.id);
+                });
+
                 const batch = writeBatch(db);
                 let count = 0;
                 for (const row of parsedCsvData.data) {
                     const firstName = row[firstNameColumn];
                     const surname = row[surnameColumn];
                     const genderRaw = row[genderColumn];
-                    const ageRaw = row[ageColumn];
+                    const ageGroup = row[ageGroupColumn];
                     const houseGroup = row[houseColumn];
-                    const ageParsed = ageRaw !== undefined && ageRaw !== null ? parseInt((''+ageRaw).trim()) : null;
-                    let age = (isNaN(ageParsed) ? null : ageParsed);
-                    let ageGroup = null;
-                    if (age !== null) {
-                        ageGroup = getAgeGroup(age);
-                    } else if (ageGroupColumn && row[ageGroupColumn]) {
-                        ageGroup = (''+row[ageGroupColumn]).trim();
-                    } else {
-                        ageGroup = 'Open';
-                    }
 
-                    if (firstName && surname && houseGroup && genderRaw) {
+                    if (firstName && surname && houseGroup && genderRaw && ageGroup) {
                         const athleteName = `${firstName.trim()} ${surname.trim()}`;
-                        const gender = (''+genderRaw).trim().toLowerCase().startsWith('m') ? 'Male' : 'Female';
-                        const participantData = { athleteName, gender, houseGroup: houseGroup.trim(), age: age, ageGroup: ageGroup, createdAt: new Date() };
-                        batch.set(doc(participantsCol), participantData);
+                        const gender = genderRaw.trim().toLowerCase().startsWith('m') ? 'Male' : 'Female';
+                        const matchingEventIds = eventsByAgeGroup[ageGroup.trim()] || [];
+                        
+                        for (const eventId of matchingEventIds) {
+                            const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', eventId, 'results');
+                            batch.set(doc(resultsCol), { athleteName, houseGroup: houseGroup.trim(), gender: gender, result: null, participated: false, createdAt: new Date() });
+                        }
                         count++;
                     }
                 }
                 await batch.commit();
                 csvUploadModal.close();
                 parsedCsvData = null;
-                alert(`${count} participants imported into meet participants. You can now assign them to events when creating an event.`);
+                alert(`${count} participants processed and added to matching events!`);
             } catch (error) {
                 console.error("Error importing participants:", error);
                 alert(`Import failed: ${error.message}`);
@@ -1385,7 +1310,6 @@
                 importBtn.textContent = 'Confirm & Import';
             }
         }
-
         async function calculateAndRenderHousePoints(meetId) {
             if(!meetId) return;
             const housePoints = { Mason: 0, Sheppard: 0, Sumner: 0, Taylor: 0 };
