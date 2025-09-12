@@ -1,7 +1,7 @@
 // This service worker file is for Progressive Web App (PWA) functionality.
 // It allows the app to work offline by caching assets.
 
-const CACHE_NAME = 'bidd-sports-cache-v7'; // Incremented cache version
+const CACHE_NAME = 'bidd-sports-cache-v10'; // Incremented cache version
 const urlsToCache = [
   '/',
   'index.html',
@@ -26,8 +26,6 @@ self.addEventListener('install', event => {
         console.log('Opened cache and caching assets for offline use.');
         return Promise.all(
           urlsToCache.map(url => {
-            // For cross-origin requests, we need to create a new Request object.
-            // Using 'no-cors' can lead to opaque responses, but it's a pragmatic way to cache third-party scripts.
             const request = (url.startsWith('http')) ? new Request(url, { mode: 'no-cors' }) : url;
             return cache.add(request).catch(error => {
               console.warn(`Failed to cache ${url}:`, error);
@@ -36,12 +34,11 @@ self.addEventListener('install', event => {
         );
       })
   );
-  self.skipWaiting(); // Force the waiting service worker to become the active service worker.
+  self.skipWaiting();
 });
 
 // Serve content using a Cache First, then Network strategy
 self.addEventListener('fetch', event => {
-    // We only want to cache GET requests.
     if (event.request.method !== 'GET') {
         return;
     }
@@ -49,14 +46,10 @@ self.addEventListener('fetch', event => {
     event.respondWith(
         caches.open(CACHE_NAME).then(cache => {
             return cache.match(event.request).then(response => {
-                // If we have a match in the cache, return it.
                 if (response) {
                     return response;
                 }
-
-                // Otherwise, fetch from the network.
                 return fetch(event.request).then(networkResponse => {
-                     // Check if we received a valid response and it's not from Firebase (to avoid caching dynamic data)
                     if (networkResponse && networkResponse.status === 200 && !networkResponse.url.includes('firestore.googleapis.com')) {
                         const responseToCache = networkResponse.clone();
                         cache.put(event.request, responseToCache);
@@ -82,7 +75,7 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    }).then(() => self.clients.claim()) // Become the active service worker for all clients immediately.
+    }).then(() => self.clients.claim())
   );
 });
 
