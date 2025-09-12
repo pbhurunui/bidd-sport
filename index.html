@@ -614,6 +614,7 @@
         let currentParticipants = [];
         let currentSortOrder = 'placing'; // 'placing' or 'alphabetical'
         let currentGenderView = 'Male';
+        let deleteContext = null; // { type: 'event'/'participant', id: '...' }
 
         let meetsUnsubscribe = null;
         let eventsUnsubscribe = null;
@@ -1010,6 +1011,17 @@
                 actionsCell.appendChild(clearButton);
             }
 
+            const deleteParticipantBtn = document.createElement('button');
+            deleteParticipantBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>`;
+            deleteParticipantBtn.className = 'text-slate-500 hover:text-red-600';
+            deleteParticipantBtn.title = "Delete Participant";
+            deleteParticipantBtn.addEventListener('click', () => {
+                deleteContext = { type: 'participant', id: participant.id };
+                deleteConfirmText.textContent = `This will permanently delete ${participant.athleteName} from this event. This action cannot be undone.`;
+                deleteConfirmModal.showModal();
+            });
+            actionsCell.appendChild(deleteParticipantBtn);
+
             row.querySelector('.participation-check').addEventListener('change', (e) => handleToggleParticipation(e.target.dataset.id, e.target.checked));
 
             return row;
@@ -1132,24 +1144,39 @@
                 console.error("Error updating result:", error);
             }
         }
-        async function handleDeleteEvent() {
-            if (!currentMeetId || !currentEventId) return;
-             deleteConfirmModal.close();
-            try {
-                const eventDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId);
-                const resultsColRef = collection(eventDocRef, 'results');
-                const resultsSnapshot = await getDocs(resultsColRef);
-                const batch = writeBatch(db);
-                resultsSnapshot.docs.forEach(d => batch.delete(d.ref));
-                await batch.commit();
-                await deleteDoc(eventDocRef);
-                showView('events');
-                currentEventId = null;
-            } catch(error) {
-                console.error("Error deleting event:", error);
-                alert("Could not delete event. Please check connection.");
+        
+        async function handleDelete() {
+            if (!deleteContext || !currentMeetId) return;
+            const { type, id } = deleteContext;
+
+            if(type === 'event' && currentEventId) {
+                 try {
+                    const eventDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId);
+                    const resultsColRef = collection(eventDocRef, 'results');
+                    const resultsSnapshot = await getDocs(resultsColRef);
+                    const batch = writeBatch(db);
+                    resultsSnapshot.docs.forEach(d => batch.delete(d.ref));
+                    await batch.commit();
+                    await deleteDoc(eventDocRef);
+                    showView('events');
+                    currentEventId = null;
+                } catch(error) {
+                    console.error("Error deleting event:", error);
+                    alert("Could not delete event. Please check connection.");
+                }
+            } else if (type === 'participant' && currentEventId) {
+                try {
+                    const participantDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId, 'results', id);
+                    await deleteDoc(participantDocRef);
+                } catch(error) {
+                    console.error("Error deleting participant:", error);
+                    alert("Could not delete participant. Please check connection.");
+                }
             }
+            deleteConfirmModal.close();
+            deleteContext = null;
         }
+
         function handleFileSelect(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1365,7 +1392,7 @@
                 card.className = 'bg-white p-5 rounded-lg shadow-md';
                 card.innerHTML = `
                     <h3 class="text-xl font-bold text-slate-800 truncate">${event.name}</h3>
-                    <p class="text-slate-500 capitalize">${event.scoringMethod === 'low-wins' ? 'Time-based' : 'Score-based'} Event</p>
+                    <p class="text-slate-500 capitalize">${event.eventType} Event</p>
                     <button data-event-id="${event.id}" data-event-name="${event.name}" class="signup-btn mt-4 w-full bg-teal-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-teal-700 transition duration-200">Sign Up</button>
                 `;
                 signupEventsGrid.appendChild(card);
@@ -1420,6 +1447,7 @@
         addParticipantBtn.addEventListener('click', () => addParticipantModal.showModal());
         editResultForm.addEventListener('submit', handleUpdateResult);
         editParticipantForm.addEventListener('submit', handleUpdateParticipant);
+        editEventForm.addEventListener('submit', handleUpdateEvent);
         publicSignupForm.addEventListener('submit', handlePublicSignup);
         
         backToMeetsBtn.addEventListener('click', () => {
@@ -1449,10 +1477,11 @@
 
 
         deleteEventBtn.addEventListener('click', () => {
+            deleteContext = { type: 'event' };
             deleteConfirmText.textContent = `This will permanently delete the event "${currentEventName}" and all its results. This action cannot be undone.`
             deleteConfirmModal.showModal();
         });
-        confirmDeleteBtn.addEventListener('click', handleDeleteEvent);
+        confirmDeleteBtn.addEventListener('click', handleDelete);
         uploadCsvBtn.addEventListener('click', () => csvFileInput.click());
         csvFileInput.addEventListener('change', handleFileSelect);
         confirmCsvImport.addEventListener('click', handleConfirmCsvImport);
