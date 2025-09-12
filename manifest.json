@@ -1,0 +1,22 @@
+{
+  "name": "BIDD SPORTS",
+  "short_name": "BIDD SPORTS",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#4f46e5",
+  "description": "An app to manage school athletics events.",
+  "icons": [
+    {
+      "src": "HurunuiCollegeLogoRefresh-07%20large.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "HurunuiCollegeLogoRefresh-07%20large.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+
