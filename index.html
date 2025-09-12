@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BIDD SPORTS</title>
+    <title>Bidd Sports</title>
     <!-- Link to the Web App Manifest -->
     <link rel="manifest" href="manifest.json">
     <!-- Theme color for the browser address bar -->
@@ -71,7 +71,7 @@
                     <img id="schoolLogo" src="HurunuiCollegeLogoRefresh-07%20large.png" alt="School Logo" class="w-20 h-20 md:w-24 md:h-24 object-contain">
                 </div>
                 <div>
-                    <h1 class="text-3xl md:text-4xl font-bold text-slate-900">BIDD SPORTS</h1>
+                    <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Bidd Sports</h1>
                     <p class="text-slate-600 mt-1">Your official tool for managing sports competitions.</p>
                 </div>
             </div>
@@ -263,10 +263,11 @@
                     <input type="text" id="eventName" name="eventName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" placeholder="e.g., 100m Sprint" required>
                 </div>
                 <div class="mb-4">
-                    <label for="scoringMethod" class="block text-sm font-medium text-slate-700">Scoring Method</label>
-                    <select id="scoringMethod" name="scoringMethod" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" required>
-                        <option value="low-wins">Lowest score wins (e.g., time)</option>
-                        <option value="high-wins">Highest score wins (e.g., points)</option>
+                    <label for="eventType" class="block text-sm font-medium text-slate-700">Event Type</label>
+                    <select id="eventType" name="eventType" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" required>
+                        <option value="Time">Time (Lowest score wins)</option>
+                        <option value="Distance">Distance (Highest score wins)</option>
+                        <option value="Points">Points (Highest score wins)</option>
                     </select>
                 </div>
                  <div class="mb-4">
@@ -406,7 +407,7 @@
         <div class="modal-content bg-white p-6 rounded-lg">
             <h3 class="text-xl font-bold mb-4">Import Participants from CSV</h3>
             <p class="text-slate-600 mb-4">Map the columns from your CSV file to the required fields.</p>
-            <div id="csvMapping" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div id="csvMapping" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <label for="csvFirstName" class="block text-sm font-medium text-slate-700">First Name Column</label>
                     <select id="csvFirstName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm"></select>
@@ -660,7 +661,7 @@
         }
 
         function isTimeBased(type) {
-            return type === 'low-wins';
+            return type === 'Time';
         }
 
         // --- MEET FUNCTIONS ---
@@ -714,7 +715,7 @@
             events.forEach(event => {
                 const card = document.createElement('div');
                 card.className = 'bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer';
-                card.innerHTML = `<h3 class="text-xl font-bold text-slate-800 truncate">${event.name}</h3><p class="text-slate-500 capitalize">${event.scoringMethod === 'low-wins' ? 'Time-based' : 'Score-based'} Event</p>`;
+                card.innerHTML = `<h3 class="text-xl font-bold text-slate-800 truncate">${event.name}</h3><p class="text-slate-500 capitalize">${event.eventType} Event</p>`;
                 card.addEventListener('click', () => {
                     currentEventId = event.id;
                     currentEventName = event.name;
@@ -728,7 +729,7 @@
                     
                     let maleRecordText = 'Male Record: Not set';
                     if (event.maleRecord) {
-                        const formattedRecord = isTimeBased(event.scoringMethod) ? formatTime(event.maleRecord) + 's' : event.maleRecord + (event.units || '');
+                        const formattedRecord = isTimeBased(event.eventType) ? formatTime(event.maleRecord) + 's' : event.maleRecord + (event.units || '');
                         maleRecordText = `Male Record: ${formattedRecord}`;
                         if (event.maleRecordHolder) {
                             maleRecordText += ` (${event.maleRecordHolder}, ${event.maleRecordYear || ''})`;
@@ -738,7 +739,7 @@
 
                     let femaleRecordText = 'Female Record: Not set';
                     if (event.femaleRecord) {
-                        const formattedRecord = isTimeBased(event.scoringMethod) ? formatTime(event.femaleRecord) + 's' : event.femaleRecord + (event.units || '');
+                        const formattedRecord = isTimeBased(event.eventType) ? formatTime(event.femaleRecord) + 's' : event.femaleRecord + (event.units || '');
                         femaleRecordText = `Female Record: ${formattedRecord}`;
                         if (event.femaleRecordHolder) {
                             femaleRecordText += ` (${event.femaleRecordHolder}, ${event.femaleRecordYear || ''})`;
@@ -769,7 +770,7 @@
             const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events');
             const dataBuilder = fd => ({ 
                 name: fd.get('eventName'), 
-                scoringMethod: fd.get('scoringMethod'), 
+                eventType: fd.get('eventType'), 
                 units: fd.get('eventUnits'),
                 maleRecord: parseFloat(fd.get('maleEventRecord')) || null,
                 maleRecordHolder: fd.get('maleRecordHolder') || null,
@@ -787,18 +788,18 @@
             
             const participantsOfGender = participants.filter(p => p.gender === currentGenderView);
             
-            const scoringMethod = event.scoringMethod;
+            const eventType = event.eventType;
             const eventRecord = currentGenderView === 'Male' ? event.maleRecord : event.femaleRecord;
             
             const withResults = participantsOfGender.filter(p => p.result !== null && p.result !== undefined);
             const withoutResults = participantsOfGender.filter(p => p.result === null || p.result === undefined);
             
-            withResults.sort((a, b) => isTimeBased(scoringMethod) ? a.result - b.result : b.result - a.result);
+            withResults.sort((a, b) => isTimeBased(eventType) ? a.result - b.result : b.result - a.result);
             
             if (withResults.length > 0) {
                  withResults.forEach(p => p.isRecord = false);
                 const topResult = withResults[0].result;
-                let isNewRecord = (eventRecord !== null && ((isTimeBased(scoringMethod) && topResult < eventRecord) || (!isTimeBased(scoringMethod) && topResult > eventRecord))) || (eventRecord === null && topResult !== null);
+                let isNewRecord = (eventRecord !== null && ((isTimeBased(eventType) && topResult < eventRecord) || (!isTimeBased(eventType) && topResult > eventRecord))) || (eventRecord === null && topResult !== null);
                 if (isNewRecord) {
                     withResults.forEach(p => { if(p.result === topResult) p.isRecord = true; });
                 }
@@ -828,15 +829,15 @@
             resultsContainer.querySelector('table').classList.toggle('hidden', !hasParticipants);
             
             displayList.forEach(p => {
-                const row = createParticipantRow(p, p.placing || '-', scoringMethod);
+                const row = createParticipantRow(p, p.placing || '-', eventType);
                 resultsTableBody.appendChild(row);
             });
         }
-        function createParticipantRow(participant, rank, scoringMethod) {
+        function createParticipantRow(participant, rank, eventType) {
             const row = document.createElement('tr');
             row.className = 'border-b border-slate-200 hover:bg-slate-50';
             const hasResult = participant.result !== null && participant.result !== undefined;
-            let displayResult = hasResult ? (isTimeBased(scoringMethod) ? formatTime(participant.result) : participant.result) : 'N/A';
+            let displayResult = hasResult ? (isTimeBased(eventType) ? formatTime(participant.result) : participant.result) : 'N/A';
             
             if (participant.isRecord) {
                 displayResult += ` <span class="ml-2 text-amber-500 font-bold">🏆 New Record!</span>`;
@@ -987,14 +988,14 @@
                 const withResults = participants.filter(p => p.result !== null && p.result !== undefined);
                 
                 if (withResults.length > 0) {
-                    withResults.sort((a, b) => isTimeBased(currentEvent.scoringMethod) ? a.result - b.result : b.result - a.result);
+                    withResults.sort((a, b) => isTimeBased(currentEvent.eventType) ? a.result - b.result : b.result - a.result);
                     const topResult = withResults[0].result;
 
                     const recordBreaker = withResults.find(p => p.result === topResult);
                     const gender = recordBreaker.gender;
                     const eventRecord = gender === 'Male' ? currentEvent.maleRecord : currentEvent.femaleRecord;
 
-                    const isNewRecord = (eventRecord !== null && ((isTimeBased(currentEvent.scoringMethod) && topResult < eventRecord) || (!isTimeBased(currentEvent.scoringMethod) && topResult > eventRecord))) || (eventRecord === null && topResult !== null);
+                    const isNewRecord = (eventRecord !== null && ((isTimeBased(currentEvent.eventType) && topResult < eventRecord) || (!isTimeBased(currentEvent.eventType) && topResult > eventRecord))) || (eventRecord === null && topResult !== null);
                     
                     if (isNewRecord) {
                         if (gender === 'Male') {
@@ -1013,6 +1014,7 @@
         }
         async function handleDeleteEvent() {
             if (!currentMeetId || !currentEventId) return;
+             deleteConfirmModal.close();
             try {
                 const eventDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId);
                 const resultsColRef = collection(eventDocRef, 'results');
@@ -1025,8 +1027,7 @@
                 currentEventId = null;
             } catch(error) {
                 console.error("Error deleting event:", error);
-            } finally {
-                deleteConfirmModal.close();
+                alert("Could not delete event. Please check connection.");
             }
         }
         function handleFileSelect(event) {
@@ -1117,7 +1118,7 @@
                 ['Male', 'Female'].forEach(gender => {
                     const genderResults = withResults.filter(p => p.gender === gender);
                     if (genderResults.length > 0) {
-                        genderResults.sort((a, b) => isTimeBased(event.scoringMethod) ? a.result - b.result : b.result - a.result);
+                        genderResults.sort((a, b) => isTimeBased(event.eventType) ? a.result - b.result : b.result - a.result);
                         genderResults[0].placing = 1;
                         for (let i = 1; i < genderResults.length; i++) {
                             if (genderResults[i].result === genderResults[i - 1].result) {
