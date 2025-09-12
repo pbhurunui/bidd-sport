@@ -244,6 +244,7 @@
                     <select id="eventType" name="eventType" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 dark:text-white border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm" required>
                         <option value="track">Track (lower time is better)</option>
                         <option value="field">Field (higher score is better)</option>
+                        <option value="swimming">Swimming (lower time is better)</option>
                     </select>
                 </div>
                  <div class="mb-4">
@@ -518,6 +519,10 @@
             return `${paddedMins}:${paddedSecs}`;
         }
 
+        function isTimeBased(type) {
+            return type === 'track' || type === 'swimming';
+        }
+
         // --- MEET FUNCTIONS ---
         function renderMeets(meets) {
             meetsGrid.innerHTML = '';
@@ -578,8 +583,8 @@
                     resultsEventName.textContent = event.name;
                     let recordText = '';
                     if (event.record) {
-                        const formattedRecord = event.type === 'track' ? formatTime(event.record) : event.record;
-                        recordText = `Record: ${formattedRecord}${event.units || ''}`;
+                        const formattedRecord = isTimeBased(event.type) ? formatTime(event.record) : event.record;
+                        recordText = `Record: ${formattedRecord}${!isTimeBased(event.type) ? event.units || '' : 's'}`;
                         if (event.recordHolder) {
                             recordText += ` (${event.recordHolder}`;
                             if (event.recordYear) {
@@ -630,12 +635,12 @@
             const withResults = participants.filter(p => p.result !== null && p.result !== undefined);
             const withoutResults = participants.filter(p => p.result === null || p.result === undefined);
             
-            withResults.sort((a, b) => eventType === 'track' ? a.result - b.result : b.result - a.result);
+            withResults.sort((a, b) => isTimeBased(eventType) ? a.result - b.result : b.result - a.result);
             
             if (withResults.length > 0) {
                  withResults.forEach(p => p.isRecord = false);
                 const topResult = withResults[0].result;
-                let isNewRecord = (eventRecord !== null && ((eventType === 'track' && topResult < eventRecord) || (eventType === 'field' && topResult > eventRecord))) || (eventRecord === null && topResult !== null);
+                let isNewRecord = (eventRecord !== null && ((isTimeBased(eventType) && topResult < eventRecord) || (eventType === 'field' && topResult > eventRecord))) || (eventRecord === null && topResult !== null);
                 if (isNewRecord) {
                     withResults.forEach(p => { if(p.result === topResult) p.isRecord = true; });
                 }
@@ -673,7 +678,7 @@
             const row = document.createElement('tr');
             row.className = 'border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50';
             const hasResult = participant.result !== null && participant.result !== undefined;
-            let displayResult = hasResult ? (eventType === 'track' ? formatTime(participant.result) : participant.result) : 'N/A';
+            let displayResult = hasResult ? (isTimeBased(eventType) ? formatTime(participant.result) : participant.result) : 'N/A';
             
             if (participant.isRecord) {
                 displayResult += ` <span class="ml-2 text-amber-500 font-bold">🏆 New Record!</span>`;
@@ -814,9 +819,9 @@
                 const withResults = participants.filter(p => p.result !== null && p.result !== undefined);
                 
                 if (withResults.length > 0) {
-                    withResults.sort((a, b) => currentEvent.type === 'track' ? a.result - b.result : b.result - a.result);
+                    withResults.sort((a, b) => isTimeBased(currentEvent.type) ? a.result - b.result : b.result - a.result);
                     const topResult = withResults[0].result;
-                    const isNewRecord = (currentEvent.record && ((currentEvent.type === 'track' && topResult < currentEvent.record) || (currentEvent.type === 'field' && topResult > currentEvent.record))) || (!currentEvent.record && topResult !== null);
+                    const isNewRecord = (currentEvent.record && ((isTimeBased(currentEvent.type) && topResult < currentEvent.record) || (currentEvent.type === 'field' && topResult > currentEvent.record))) || (!currentEvent.record && topResult !== null);
                     
                     if (isNewRecord) {
                         const recordBreaker = withResults.find(p => p.result === topResult);
@@ -932,7 +937,7 @@
                 const withResults = participants.filter(p => p.result !== null && p.result !== undefined);
                 if(withResults.length === 0) continue;
 
-                withResults.sort((a, b) => event.type === 'track' ? a.result - b.result : b.result - a.result);
+                withResults.sort((a, b) => isTimeBased(event.type) ? a.result - b.result : b.result - a.result);
                 
                 if (withResults.length > 0) {
                     withResults[0].placing = 1;
@@ -978,7 +983,7 @@
             rows.forEach(row => {
                 const rowData = [];
                 row.querySelectorAll('td').forEach((cell, index) => {
-                    if (index < 4) { // Only take first 4 columns
+                    if (index < 5) { // Include up to Result column
                         rowData.push(cell.innerText);
                     }
                 });
@@ -986,7 +991,7 @@
             });
 
             doc.autoTable({
-                head: [['Placing', 'Athlete Name', 'House', 'Result']],
+                head: [['Placing', 'Athlete Name', 'House', 'Participated', 'Result']],
                 body: tableData,
                 startY: 30
             });
