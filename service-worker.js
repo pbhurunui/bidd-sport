@@ -1,7 +1,7 @@
 // This service worker file is for Progressive Web App (PWA) functionality.
 // It allows the app to work offline by caching assets.
 
-const CACHE_NAME = 'bidd-sports-cache-v6'; // Incremented cache version
+const CACHE_NAME = 'bidd-sports-cache-v7'; // Incremented cache version
 const urlsToCache = [
   '/',
   'index.html',
