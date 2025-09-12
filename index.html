@@ -12,7 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <!-- PDF Generation Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.autotable.min.js" onload="window.pdfLibrariesLoaded = true;"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -319,6 +319,73 @@
             </form>
         </div>
     </dialog>
+    
+    <dialog id="editEventModal" class="modal p-0 rounded-lg shadow-xl max-w-md w-full">
+        <div class="modal-content bg-white p-6 rounded-lg">
+            <h3 class="text-xl font-bold mb-4">Edit Event</h3>
+            <form id="editEventForm">
+                 <input type="hidden" id="editEventId" name="eventId">
+                <div class="mb-4">
+                    <label for="editEventName" class="block text-sm font-medium text-slate-700">Event Name</label>
+                    <input type="text" id="editEventName" name="eventName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" required>
+                </div>
+                <div class="mb-4">
+                    <label for="editEventType" class="block text-sm font-medium text-slate-700">Event Type</label>
+                    <select id="editEventType" name="eventType" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" required>
+                        <option value="Time">Time (Lowest score wins)</option>
+                        <option value="Distance">Distance (Highest score wins)</option>
+                        <option value="Points">Points (Highest score wins)</option>
+                    </select>
+                </div>
+                 <div class="mb-4">
+                    <label for="editEventUnits" class="block text-sm font-medium text-slate-700">Units</label>
+                    <input type="text" id="editEventUnits" name="eventUnits" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" required>
+                </div>
+                
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <h4 class="font-medium text-slate-800">Male Record (Optional)</h4>
+                         <div class="grid grid-cols-3 gap-4 mt-2">
+                            <div class="col-span-1">
+                                <label for="editMaleEventRecord" class="block text-sm text-slate-600">Record</label>
+                                <input type="number" step="any" id="editMaleEventRecord" name="maleEventRecord" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
+                            </div>
+                            <div class="col-span-2">
+                                <label for="editMaleRecordHolder" class="block text-sm text-slate-600">Holder</label>
+                                <input type="text" id="editMaleRecordHolder" name="maleRecordHolder" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
+                            </div>
+                            <div class="col-span-1">
+                                <label for="editMaleRecordYear" class="block text-sm text-slate-600">Year</label>
+                                <input type="number" id="editMaleRecordYear" name="maleRecordYear" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
+                            </div>
+                        </div>
+                    </div>
+                     <div>
+                        <h4 class="font-medium text-slate-800">Female Record (Optional)</h4>
+                         <div class="grid grid-cols-3 gap-4 mt-2">
+                            <div class="col-span-1">
+                                <label for="editFemaleEventRecord" class="block text-sm text-slate-600">Record</label>
+                                <input type="number" step="any" id="editFemaleEventRecord" name="femaleEventRecord" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
+                            </div>
+                            <div class="col-span-2">
+                                <label for="editFemaleRecordHolder" class="block text-sm text-slate-600">Holder</label>
+                                <input type="text" id="editFemaleRecordHolder" name="femaleRecordHolder" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
+                            </div>
+                            <div class="col-span-1">
+                                 <label for="editFemaleRecordYear" class="block text-sm text-slate-600">Year</label>
+                                <input type="number" id="editFemaleRecordYear" name="femaleRecordYear" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3">
+                    <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
+                    <button type="submit" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
 
     <dialog id="addParticipantModal" class="modal p-0 rounded-lg shadow-xl max-w-md w-full">
         <div class="modal-content bg-white p-6 rounded-lg">
@@ -516,6 +583,7 @@
             deleteDoc,
             writeBatch,
             getDocs,
+            getDoc,
             where,
             enableIndexedDbPersistence
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -577,6 +645,9 @@
         const addEventBtn = document.getElementById('addEventBtn');
         const addEventModal = document.getElementById('addEventModal');
         const addEventForm = document.getElementById('addEventForm');
+        const editEventModal = document.getElementById('editEventModal');
+        const editEventForm = document.getElementById('editEventForm');
+        
         const shareLinkBtn = document.getElementById('shareLinkBtn');
         const shareLinkModal = document.getElementById('shareLinkModal');
         const shareableLinkInput = document.getElementById('shareableLink');
@@ -714,9 +785,12 @@
             noEventsMessage.classList.toggle('hidden', events.length > 0);
             events.forEach(event => {
                 const card = document.createElement('div');
-                card.className = 'bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer';
-                card.innerHTML = `<h3 class="text-xl font-bold text-slate-800 truncate">${event.name}</h3><p class="text-slate-500 capitalize">${event.eventType} Event</p>`;
-                card.addEventListener('click', () => {
+                card.className = 'bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow relative';
+                
+                const cardContent = document.createElement('div');
+                cardContent.className = 'cursor-pointer';
+                cardContent.innerHTML = `<h3 class="text-xl font-bold text-slate-800 truncate">${event.name}</h3><p class="text-slate-500 capitalize">${event.eventType} Event</p>`;
+                cardContent.addEventListener('click', () => {
                     currentEventId = event.id;
                     currentEventName = event.name;
                     currentEvent = event;
@@ -750,6 +824,27 @@
                     showView('results');
                     fetchResults(currentMeetId, event.id, event);
                 });
+
+                const editBtn = document.createElement('button');
+                editBtn.className = 'absolute top-2 right-2 p-1 rounded-full hover:bg-slate-200';
+                editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>`;
+                editBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    editEventForm.elements.eventId.value = event.id;
+                    editEventForm.elements.eventName.value = event.name;
+                    editEventForm.elements.eventType.value = event.eventType;
+                    editEventForm.elements.eventUnits.value = event.units;
+                    editEventForm.elements.maleEventRecord.value = event.maleRecord || '';
+                    editEventForm.elements.maleRecordHolder.value = event.maleRecordHolder || '';
+                    editEventForm.elements.maleRecordYear.value = event.maleRecordYear || '';
+                    editEventForm.elements.femaleEventRecord.value = event.femaleRecord || '';
+                    editEventForm.elements.femaleRecordHolder.value = event.femaleRecordHolder || '';
+                    editEventForm.elements.femaleRecordYear.value = event.femaleRecordYear || '';
+                    editEventModal.showModal();
+                });
+                
+                card.appendChild(editBtn);
+                card.appendChild(cardContent);
                 eventsGrid.appendChild(card);
             });
         }
@@ -781,6 +876,31 @@
             });
             handleFormSubmit(e, addEventModal, collectionRef, dataBuilder);
         });
+        
+        async function handleUpdateEvent(e) {
+            e.preventDefault();
+            if(!currentMeetId) return;
+            const formData = new FormData(e.target);
+            const eventId = formData.get('eventId');
+            const updatedEvent = {
+                name: formData.get('eventName'),
+                eventType: formData.get('eventType'),
+                units: formData.get('eventUnits'),
+                maleRecord: parseFloat(formData.get('maleEventRecord')) || null,
+                maleRecordHolder: formData.get('maleRecordHolder') || null,
+                maleRecordYear: parseInt(formData.get('maleRecordYear')) || null,
+                femaleRecord: parseFloat(formData.get('femaleEventRecord')) || null,
+                femaleRecordHolder: formData.get('femaleRecordHolder') || null,
+                femaleRecordYear: parseInt(formData.get('femaleRecordYear')) || null
+            };
+            const eventDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', eventId);
+            try {
+                await updateDoc(eventDocRef, updatedEvent);
+                editEventModal.close();
+            } catch (error) {
+                console.error("Error updating event:", error);
+            }
+        }
 
         // --- PARTICIPANT/RESULT FUNCTIONS ---
         function renderParticipants(participants, event) {
@@ -1071,10 +1191,15 @@
                 alert("Please map all columns: First Name, Surname, Gender, and Team/House.");
                 return;
             }
+            
+            const importBtn = document.getElementById('confirmCsvImport');
+            importBtn.disabled = true;
+            importBtn.textContent = 'Importing...';
 
             try {
                 const batch = writeBatch(db);
                 const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId, 'results');
+                let count = 0;
                 parsedCsvData.data.forEach(row => {
                     const firstName = row[firstNameColumn];
                     const surname = row[surnameColumn];
@@ -1083,13 +1208,19 @@
                     if (firstName && surname && houseGroup && gender) {
                         const athleteName = `${firstName.trim()} ${surname.trim()}`;
                         batch.set(doc(resultsCol), { athleteName: athleteName, houseGroup: houseGroup.trim(), gender: gender.trim(), result: null, participated: false, createdAt: new Date() });
+                        count++;
                     }
                 });
                 await batch.commit();
                 csvUploadModal.close();
                 parsedCsvData = null;
+                alert(`${count} participants imported successfully!`);
             } catch (error) {
                 console.error("Error importing participants:", error);
+                alert(`Import failed: ${error.message}`);
+            } finally {
+                importBtn.disabled = false;
+                importBtn.textContent = 'Confirm & Import';
             }
         }
         async function calculateAndRenderHousePoints(meetId) {
