@@ -70,78 +70,7 @@
                  <div class="p-2 bg-white rounded-lg shadow-md">
                     <img id="schoolLogo" src="HurunuiCollegeLogoRefresh-07%20large.png" alt="School Logo" class="w-20 h-20 md:w-24 md:h-24 object-contain">
                 </div>
-                <div>
-                    <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Bidd Sports</h1>
-                    <p class="text-slate-600 mt-1">Your official tool for managing sports competitions.</p>
-                </div>
-            </div>
-        </header>
-
-        <!-- Loading State -->
-        <div id="loading" class="flex flex-col justify-center items-center py-20">
-            <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-24 w-24"></div>
-            <p id="loading-message" class="mt-4 text-slate-600 text-center">Connecting to database...</p>
-        </div>
-        
-        <!-- Main Content (Hidden until loaded) -->
-        <main id="mainContent" class="hidden">
-
-             <!-- Meets View -->
-            <div id="meetsView">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-semibold text-slate-800">Competitions</h2>
-                    <button id="addMeetBtn" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-indigo-700 transition duration-200">
-                        + Add Competition
-                    </button>
-                </div>
-                 <p class="text-slate-500 mb-4 -mt-2">Select a competition to view its events or create a new one.</p>
-                <div id="meetsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Meet cards will be inserted here -->
-                </div>
-                 <div id="noMeetsMessage" class="hidden text-center py-16 bg-white rounded-lg shadow-sm">
-                    <h3 class="text-xl font-medium text-slate-700">No competitions yet!</h3>
-                    <p class="text-slate-500 mt-2">Click the "+ Add Competition" button to get started.</p>
-                </div>
-            </div>
-            
-            <!-- Events View -->
-            <div id="eventsView" class="hidden">
-                 <div class="mb-4">
-                     <button id="backToMeetsBtn" class="text-indigo-600 hover:text-indigo-800 font-medium transition duration-200">
-                        &larr; Back to Competitions
-                    </button>
-                </div>
-                <div id="housePointsContainer" class="mb-8 bg-white p-6 rounded-lg shadow-lg">
-                    <div class="flex justify-between items-center mb-2">
-                        <h2 id="housePointsTitle" class="text-2xl font-semibold text-slate-800">Team Points</h2>
-                        <button id="printHousePointsBtn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
-                            Loading...
-                        </button>
-                    </div>
-                     <p class="text-sm text-slate-500 mb-4">Placing: 1st (5), 2nd (3), 3rd (1). Participation: 1 point per participant with a result or checkbox ticked.</p>
-                    <ol id="housePointsList" class="space-y-4">
-                        <!-- House points will be dynamically inserted here -->
-                    </ol>
-                </div>
-
-                <div class="flex justify-between items-center mb-4">
-                    <h2 id="eventsTitle" class="text-2xl font-semibold text-slate-800">Events</h2>
-                    <div class="flex gap-2">
-                         <button id="uploadCsvEventsBtn" class="bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-700 transition duration-200">
-                            Import Participants
-                        </button>
-                         <button id="shareLinkBtn" class="bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-700 transition duration-200">
-                            Share Sign-up Link
-                        </button>
-                        <button id="addEventBtn" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-indigo-700 transition duration-200">
-                            + Add Event
-                        </button>
-                    </div>
-                </div>
-                 <p class="text-slate-500 mb-2 -mt-2">Click on an event to view results, or add a new event for this competition.</p>
-                <div class="mb-4">
-                    <input type="search" id="eventSearchInput" placeholder="Search for an event..." class="w-full px-4 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
+                 <p class="text-slate-500 mb-4 -mt-2">Click on an event to view results, or add a new event for this competition.</p>
                 <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- Event cards will be inserted here -->
                 </div>
@@ -1591,12 +1520,6 @@
             renderParticipants(currentParticipants, currentEvent);
         });
         
-        eventSearchInput.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const filteredEvents = allEvents.filter(event => event.name.toLowerCase().includes(searchTerm));
-            renderEvents(filteredEvents);
-        });
-
         function updateTabs() {
             if(currentGenderView === 'Male') {
                 maleTab.classList.add('tab-active');
@@ -1689,3 +1612,5 @@
     </script>
 </body>
 </html>
+
+
