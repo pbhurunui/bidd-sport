@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Athletics Event Recorder</title>
+    <!-- Link to the Web App Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <!-- Theme color for the browser address bar -->
+    <meta name="theme-color" content="#4f46e5">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <!-- PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.autotable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        .modal-content {
+            transition: transform 0.25s ease;
+        }
+        .modal:not([open]) {
+            pointer-events: none;
+            opacity: 0;
+        }
+        .modal:not([open]) .modal-content {
+            transform: scale(0.95);
+        }
+        .loader {
+            border-top-color: #4f46e5; /* indigo-600 */
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <!-- Main Application Container -->
+    <div id="app" class="container mx-auto p-4 md:p-6 max-w-7xl">
+
+        <!-- Header -->
+        <header class="flex items-center gap-4 md:gap-6 mb-6 md:mb-8">
+            <img id="schoolLogo" src="HurunuiCollegeLogoRefresh-07%20large.png" alt="School Logo" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-contain shadow-md">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Athletics Meet Dashboard</h1>
+                <p class="text-slate-600 mt-1">Manage events and track results in real-time. Now with offline support!</p>
+            </div>
+        </header>
+
+        <!-- Loading State -->
+        <div id="loading" class="flex flex-col justify-center items-center py-20">
+            <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-24 w-24"></div>
+            <p id="loading-message" class="mt-4 text-slate-600 text-center">Connecting to database...</p>
+        </div>
+        
+        <!-- Main Content (Hidden until loaded) -->
+        <main id="mainContent" class="hidden">
+
+             <!-- Meets View -->
+            <div id="meetsView">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-semibold text-slate-800">Meets</h2>
+                    <button id="addMeetBtn" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-indigo-700 transition duration-200">
+                        + Add Meet
+                    </button>
+                </div>
+                <div id="meetsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Meet cards will be inserted here -->
+                </div>
+                 <div id="noMeetsMessage" class="hidden text-center py-16 bg-white rounded-lg shadow-sm">
+                    <h3 class="text-xl font-medium text-slate-700">No meets yet!</h3>
+                    <p class="text-slate-500 mt-2">Click the "+ Add Meet" button to get started.</p>
+                </div>
+            </div>
+            
+            <!-- Events View -->
+            <div id="eventsView" class="hidden">
+                 <div class="mb-4">
+                     <button id="backToMeetsBtn" class="text-indigo-600 hover:text-indigo-800 font-medium transition duration-200">
+                        &larr; Back to Meets
+                    </button>
+                </div>
+                <div id="housePointsContainer" class="mb-8 bg-white p-6 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 id="housePointsTitle" class="text-2xl font-semibold text-slate-800">House Points</h2>
+                        <button id="printHousePointsBtn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200">
+                            Print Points
+                        </button>
+                    </div>
+                     <p class="text-sm text-slate-500 mb-4">Points are awarded for 1st (5), 2nd (3), and 3rd (1) place.</p>
+                    <ol id="housePointsList" class="space-y-3">
+                        <!-- House points will be dynamically inserted here -->
+                    </ol>
+                </div>
+
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="eventsTitle" class="text-2xl font-semibold text-slate-800">Events</h2>
+                    <button id="addEventBtn" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-indigo-700 transition duration-200">
+                        + Add Event
+                    </button>
+                </div>
+                <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Event cards will be inserted here -->
+                </div>
+                 <div id="noEventsMessage" class="hidden text-center py-16 bg-white rounded-lg shadow-sm">
+                    <h3 class="text-xl font-medium text-slate-700">No events yet!</h3>
+                    <p class="text-slate-500 mt-2">Click the "+ Add Event" button to get started.</p>
+                </div>
+            </div>
+
+            <!-- Results View (Initially hidden) -->
+            <div id="resultsView" class="hidden">
+                <div class="mb-4">
+                     <button id="backToEventsBtn" class="text-indigo-600 hover:text-indigo-800 font-medium transition duration-200">
+                        &larr; Back to Events
+                    </button>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <div class="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-4">
+                        <div>
+                            <h2 id="resultsEventName" class="text-3xl font-bold text-slate-900"></h2>
+                            <p id="resultsEventInfo" class="text-slate-500"></p>
+                        </div>
+                        <div class="flex gap-2 flex-wrap justify-end">
+                             <button id="printResultsBtn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200">
+                                Print Results
+                            </button>
+                            <input type="file" id="csvFileInput" class="hidden" accept=".csv">
+                            <button id="uploadCsvBtn" class="bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-700 transition duration-200">
+                                Upload CSV
+                            </button>
+                            <button id="addParticipantBtn" class="bg-teal-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-teal-700 transition duration-200">
+                                + Add Participant
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="resultsContainer" class="overflow-x-auto">
+                        <table class="w-full text-left min-w-[600px]">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th class="p-3 font-semibold text-sm">Placing</th>
+                                    <th class="p-3 font-semibold text-sm">Athlete Name</th>
+                                    <th class="p-3 font-semibold text-sm">House</th>
+                                    <th class="p-3 font-semibold text-sm">Result</th>
+                                    <th class="p-3 font-semibold text-sm">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsTableBody">
+                                <!-- Results will be inserted here -->
+                            </tbody>
+                        </table>
+                        <div id="noParticipantsMessage" class="hidden text-center py-12">
+                            <p class="text-slate-500">No participants have been added to this event yet.</p>
+                        </div>
+                    </div>
+                </div>
+                 <div class="mt-6 flex justify-end">
+                        <button id="deleteEventBtn" class="bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-red-700 transition duration-200">
+                           Delete Event
+                        </button>
+                    </div>
+            </div>
+            
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <dialog id="addMeetModal" class="modal p-0 rounded-lg shadow-xl max-w-md w-full">
+        <div class="modal-content bg-white p-6 rounded-lg">
+            <h3 class="text-xl font-bold mb-4">Add New Meet</h3>
+            <form id="addMeetForm">
+                <div class="mb-6">
+                    <label for="meetName" class="block text-sm font-medium text-slate-700">Meet Name</label>
+                    <input type="text" id="meetName" name="meetName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Annual Athletics 2025" required>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
+                    <button type="submit" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Create Meet</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <dialog id="addEventModal" class="modal p-0 rounded-lg shadow-xl max-w-md w-full">
+        <div class="modal-content bg-white p-6 rounded-lg">
+            <h3 class="text-xl font-bold mb-4">Add New Event</h3>
+            <form id="addEventForm">
+                <div class="mb-4">
+                    <label for="eventName" class="block text-sm font-medium text-slate-700">Event Name</label>
+                    <input type="text" id="eventName" name="eventName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Boys U12 100m Sprint" required>
+                </div>
+                <div class="mb-4">
+                    <label for="eventType" class="block text-sm font-medium text-slate-700">Event Type</label>
+                    <select id="eventType" name="eventType" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                        <option value="track">Track (lower time is better)</option>
+                        <option value="field">Field (higher score is better)</option>
+                    </select>
+                </div>
+                <div class="mb-6">
+                    <label for="eventUnits" class="block text-sm font-medium text-slate-700">Units</label>
+                    <input type="text" id="eventUnits" name="eventUnits" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., s, m, cm" required>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
+                    <button type="submit" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Create Event</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <dialog id="addParticipantModal" class="modal p-0 rounded-lg shadow-xl max-w-md w-full">
+        <div class="modal-content bg-white p-6 rounded-lg">
+            <h3 class="text-xl font-bold mb-4">Add Participant</h3>
+            <form id="addParticipantForm">
+                <div class="mb-4">
+                    <label for="athleteName" class="block text-sm font-medium text-slate-700">Athlete Name</label>
+                    <input type="text" id="athleteName" name="athleteName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                </div>
+                <div class="mb-6">
+                    <label for="houseGroup" class="block text-sm font-medium text-slate-700">House Group</label>
+                    <select id="houseGroup" name="houseGroup" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                        <option value="Mason">Mason</option>
+                        <option value="Shepherd">Shepherd</option>
+                        <option value="Sumner">Sumner</option>
+                        <option value="Taylor">Taylor</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
+                    <button type="submit" class="bg-teal-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-teal-700 transition">Add Participant</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+    
+    <dialog id="editResultModal" class="modal p-0 rounded-lg shadow-xl max-w-md w-full">
+        <div class="modal-content bg-white p-6 rounded-lg">
+            <h3 class="text-xl font-bold mb-4">Enter Result</h3>
+            <p class="mb-4">Entering result for <strong id="editResultAthleteName"></strong>.</p>
+            <form id="editResultForm">
+                <input type="hidden" id="editResultParticipantId" name="participantId">
+                <div class="mb-6">
+                    <label for="resultValue" class="block text-sm font-medium text-slate-700">Result</label>
+                    <input type="number" step="any" id="resultValue" name="resultValue" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
+                    <button type="submit" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Save Result</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <dialog id="csvUploadModal" class="modal p-0 rounded-lg shadow-xl max-w-2xl w-full">
+        <div class="modal-content bg-white p-6 rounded-lg">
+            <h3 class="text-xl font-bold mb-4">Import Participants from CSV</h3>
+            <p class="text-slate-600 mb-4">Map the columns from your CSV file to the required fields.</p>
+            <div id="csvMapping" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="csvAthleteName" class="block text-sm font-medium text-slate-700">Athlete Name Column</label>
+                    <select id="csvAthleteName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></select>
+                </div>
+                <div>
+                    <label for="csvHouseGroup" class="block text-sm font-medium text-slate-700">House Group Column</label>
+                    <select id="csvHouseGroup" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></select>
+                </div>
+            </div>
+            <p class="text-sm font-medium text-slate-700 mb-2">Data Preview (first 5 rows)</p>
+            <div class="overflow-x-auto border rounded-lg">
+                <table class="w-full text-left">
+                    <thead id="csvPreviewHead" class="bg-slate-50"></thead>
+                    <tbody id="csvPreviewBody"></tbody>
+                </table>
+            </div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
+                <button type="button" id="confirmCsvImport" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Confirm & Import</button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="deleteConfirmModal" class="modal p-0 rounded-lg shadow-xl max-w-sm w-full">
+        <div class="modal-content bg-white p-6 rounded-lg">
+            <h3 class="text-xl font-bold mb-2">Are you sure?</h3>
+            <p id="deleteConfirmText" class="text-slate-600 mb-6">This action cannot be undone.</p>
+            <div class="flex justify-end gap-3">
+                <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
+                <button id="confirmDeleteBtn" class="bg-red-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-red-700 transition">Delete</button>
+            </div>
+        </div>
+    </dialog>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            doc, 
+            addDoc,
+            updateDoc,
+            onSnapshot,
+            query,
+            deleteDoc,
+            writeBatch,
+            getDocs,
+            enableIndexedDbPersistence
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // =====================================================================================
+        // ======================== IMPORTANT FIREBASE SETUP ===================================
+        // =====================================================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyA2BPCoA6qWKYLXBfpjhzvaTn4HyC03sE4",
+            authDomain: "bidd-sports.firebaseapp.com",
+            projectId: "bidd-sports",
+            storageBucket: "bidd-sports.appspot.com",
+            messagingSenderId: "863210699877",
+            appId: "1:863210699877:web:84d08bb519ae1aeb7eda8c"
+        };
+        const appId = "bidd-sports";
+        // =====================================================================================
+        // ======================== END OF SETUP SECTION =======================================
+        // =====================================================================================
+
+        let app, auth, db;
+        let userId;
+        let currentMeetId = null;
+        let currentEventId = null;
+        let currentMeetName = '';
+        let currentEventName = '';
+
+        let meetsUnsubscribe = null;
+        let eventsUnsubscribe = null;
+        let resultsUnsubscribe = null;
+        let parsedCsvData = null;
+        
+        const { jsPDF } = window.jspdf;
+
+        const houseColors = {
+            'Mason': { bg: 'bg-yellow-200', text: 'text-yellow-800', border: 'border-yellow-400' },
+            'Shepherd': { bg: 'bg-green-200', text: 'text-green-800', border: 'border-green-400' },
+            'Sumner': { bg: 'bg-red-200', text: 'text-red-800', border: 'border-red-400' },
+            'Taylor': { bg: 'bg-blue-200', text: 'text-blue-800', border: 'border-blue-400' }
+        };
+        
+        const loadingEl = document.getElementById('loading');
+        const loadingMessage = document.getElementById('loading-message');
+        const mainContentEl = document.getElementById('mainContent');
+        
+        const meetsView = document.getElementById('meetsView');
+        const meetsGrid = document.getElementById('meetsGrid');
+        const noMeetsMessage = document.getElementById('noMeetsMessage');
+        const addMeetBtn = document.getElementById('addMeetBtn');
+        const addMeetModal = document.getElementById('addMeetModal');
+        const addMeetForm = document.getElementById('addMeetForm');
+
+        const eventsView = document.getElementById('eventsView');
+        const eventsGrid = document.getElementById('eventsGrid');
+        const noEventsMessage = document.getElementById('noEventsMessage');
+        const backToMeetsBtn = document.getElementById('backToMeetsBtn');
+        const addEventBtn = document.getElementById('addEventBtn');
+        const addEventModal = document.getElementById('addEventModal');
+        const addEventForm = document.getElementById('addEventForm');
+
+        const resultsView = document.getElementById('resultsView');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsEventName = document.getElementById('resultsEventName');
+        const resultsEventInfo = document.getElementById('resultsEventInfo');
+        const resultsTableBody = document.getElementById('resultsTableBody');
+        const noParticipantsMessage = document.getElementById('noParticipantsMessage');
+        const backToEventsBtn = document.getElementById('backToEventsBtn');
+        const addParticipantBtn = document.getElementById('addParticipantBtn');
+        const addParticipantModal = document.getElementById('addParticipantModal');
+        const addParticipantForm = document.getElementById('addParticipantForm');
+
+        const editResultModal = document.getElementById('editResultModal');
+        const editResultForm = document.getElementById('editResultForm');
+        const editResultAthleteName = document.getElementById('editResultAthleteName');
+        const editResultParticipantId = document.getElementById('editResultParticipantId');
+
+        const deleteEventBtn = document.getElementById('deleteEventBtn');
+        const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const deleteConfirmText = document.getElementById('deleteConfirmText');
+
+        const uploadCsvBtn = document.getElementById('uploadCsvBtn');
+        const csvFileInput = document.getElementById('csvFileInput');
+        const csvUploadModal = document.getElementById('csvUploadModal');
+        const confirmCsvImport = document.getElementById('confirmCsvImport');
+        const csvAthleteNameSelect = document.getElementById('csvAthleteName');
+        const csvHouseGroupSelect = document.getElementById('csvHouseGroup');
+        const csvPreviewHead = document.getElementById('csvPreviewHead');
+        const csvPreviewBody = document.getElementById('csvPreviewBody');
+        const housePointsList = document.getElementById('housePointsList');
+        const housePointsTitle = document.getElementById('housePointsTitle');
+        const eventsTitle = document.getElementById('eventsTitle');
+        const printHousePointsBtn = document.getElementById('printHousePointsBtn');
+        const printResultsBtn = document.getElementById('printResultsBtn');
+
+        function showView(view) {
+            meetsView.classList.toggle('hidden', view !== 'meets');
+            eventsView.classList.toggle('hidden', view !== 'events');
+            resultsView.classList.toggle('hidden', view !== 'results');
+        }
+        function formatTime(seconds) {
+            if (seconds === null || seconds === undefined || isNaN(seconds)) return 'N/A';
+            const totalSeconds = parseFloat(seconds);
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+            const paddedMins = String(mins).padStart(2, '0');
+            const paddedSecs = secs.toFixed(2).padStart(5, '0');
+            return `${paddedMins}:${paddedSecs}`;
+        }
+
+        // --- MEET FUNCTIONS ---
+        function renderMeets(meets) {
+            meetsGrid.innerHTML = '';
+            noMeetsMessage.classList.toggle('hidden', meets.length > 0);
+            meets.forEach(meet => {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer';
+                card.dataset.id = meet.id;
+                card.innerHTML = `<h3 class="text-xl font-bold text-slate-800 truncate">${meet.name}</h3>`;
+                card.addEventListener('click', () => {
+                    currentMeetId = meet.id;
+                    currentMeetName = meet.name;
+                    housePointsTitle.textContent = `House Points: ${meet.name}`;
+                    eventsTitle.textContent = `Events: ${meet.name}`;
+                    showView('events');
+                    fetchEvents(meet.id);
+                    calculateAndRenderHousePoints(meet.id);
+                });
+                meetsGrid.appendChild(card);
+            });
+        }
+        async function fetchMeets() {
+            if (meetsUnsubscribe) meetsUnsubscribe();
+            const meetsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets');
+            meetsUnsubscribe = onSnapshot(query(meetsCol), snapshot => {
+                const meets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderMeets(meets);
+                loadingEl.classList.add('hidden');
+                mainContentEl.classList.remove('hidden');
+                showView('meets');
+            }, error => {
+                console.error("Firestore Error fetching meets:", error);
+                loadingMessage.innerHTML = '<strong>Error:</strong> Could not fetch data. Please verify your Firestore security rules.';
+            });
+        }
+        addMeetForm.addEventListener('submit', (e) => {
+             e.preventDefault();
+             const formData = new FormData(e.target);
+             const newMeet = { name: formData.get('meetName'), createdAt: new Date() };
+             const meetsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets');
+             addDoc(meetsCol, newMeet).then(() => {
+                e.target.reset();
+                addMeetModal.close();
+             }).catch(err => console.error("Error adding meet:", err));
+        });
+
+        // --- EVENT FUNCTIONS ---
+        function renderEvents(events) {
+            eventsGrid.innerHTML = '';
+            noEventsMessage.classList.toggle('hidden', events.length > 0);
+            events.forEach(event => {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer';
+                card.dataset.id = event.id;
+                card.innerHTML = `<h3 class="text-xl font-bold text-slate-800 truncate">${event.name}</h3><p class="text-slate-500 capitalize">${event.type} Event</p>`;
+                card.addEventListener('click', () => {
+                    currentEventId = event.id;
+                    currentEventName = event.name;
+                    resultsEventName.textContent = event.name;
+                    resultsEventInfo.textContent = `Results in ${event.units}. ${event.type === 'track' ? 'Lower is better.' : 'Higher is better.'}`;
+                    showView('results');
+                    fetchResults(currentMeetId, event.id, event.type);
+                });
+                eventsGrid.appendChild(card);
+            });
+        }
+        async function fetchEvents(meetId) {
+            if (eventsUnsubscribe) eventsUnsubscribe();
+            const eventsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', meetId, 'events');
+            eventsUnsubscribe = onSnapshot(query(eventsCol), snapshot => {
+                const events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderEvents(events);
+            }, error => {
+                console.error("Firestore Error fetching events:", error);
+            });
+        }
+        addEventForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if(!currentMeetId) return;
+            const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events');
+            const dataBuilder = fd => ({ name: fd.get('eventName'), type: fd.get('eventType'), units: fd.get('eventUnits') });
+            handleFormSubmit(e, addEventModal, collectionRef, dataBuilder);
+        });
+
+        // --- PARTICIPANT/RESULT FUNCTIONS ---
+        function renderParticipants(participants, eventType) {
+            const withResults = participants.filter(p => p.result !== null && p.result !== undefined);
+            const withoutResults = participants.filter(p => p.result === null || p.result === undefined);
+            withResults.sort((a, b) => eventType === 'track' ? a.result - b.result : b.result - a.result);
+            if (withResults.length > 0) {
+                withResults[0].placing = 1;
+                for (let i = 1; i < withResults.length; i++) {
+                    if (withResults[i].result === withResults[i - 1].result) {
+                        withResults[i].placing = withResults[i - 1].placing;
+                    } else {
+                        withResults[i].placing = i + 1;
+                    }
+                }
+            }
+            resultsTableBody.innerHTML = '';
+            const hasParticipants = participants.length > 0;
+            noParticipantsMessage.classList.toggle('hidden', hasParticipants);
+            resultsContainer.querySelector('table').classList.toggle('hidden', !hasParticipants);
+            [...withResults, ...withoutResults].forEach(p => {
+                const row = createParticipantRow(p, p.placing || '-', eventType);
+                resultsTableBody.appendChild(row);
+            });
+        }
+        function createParticipantRow(participant, rank, eventType) {
+            const row = document.createElement('tr');
+            row.className = 'border-b border-slate-200 hover:bg-slate-50';
+            const hasResult = participant.result !== null && participant.result !== undefined;
+            const displayResult = hasResult ? (eventType === 'track' ? formatTime(participant.result) : participant.result) : 'N/A';
+            
+            const houseColor = houseColors[participant.houseGroup] || { bg: 'bg-gray-200', text: 'text-gray-800' };
+            const houseBadge = `<span class="px-2 py-1 text-xs font-semibold leading-tight rounded-full ${houseColor.bg} ${houseColor.text}">${participant.houseGroup}</span>`;
+            
+            row.innerHTML = `<td class="p-3 font-medium">${rank}</td><td class="p-3">${participant.athleteName}</td><td class="p-3">${houseBadge}</td><td class="p-3">${displayResult}</td><td class="p-3"></td>`;
+            const actionButton = document.createElement('button');
+            actionButton.textContent = hasResult ? 'Edit Result' : 'Add Result';
+            actionButton.className = hasResult ? 'bg-yellow-500 text-white font-semibold px-3 py-1 text-sm rounded-md shadow hover:bg-yellow-600 transition' : 'bg-indigo-500 text-white font-semibold px-3 py-1 text-sm rounded-md shadow hover:bg-indigo-600 transition';
+            actionButton.addEventListener('click', () => {
+                editResultAthleteName.textContent = participant.athleteName;
+                editResultParticipantId.value = participant.id;
+                editResultForm.resultValue.value = participant.result || '';
+                editResultModal.showModal();
+            });
+            row.cells[4].appendChild(actionButton);
+            return row;
+        }
+        async function fetchResults(meetId, eventId, eventType) {
+            if (resultsUnsubscribe) resultsUnsubscribe();
+            const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', meetId, 'events', eventId, 'results');
+            resultsUnsubscribe = onSnapshot(query(resultsCol), snapshot => {
+                const participants = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderParticipants(participants, eventType);
+            }, error => console.error(`Error fetching results for event ${eventId}:`, error));
+        }
+        addParticipantForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if(!currentMeetId || !currentEventId) return;
+            const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId, 'results');
+            const dataBuilder = fd => ({ athleteName: fd.get('athleteName'), houseGroup: fd.get('houseGroup'), result: null, createdAt: new Date() });
+            handleFormSubmit(e, addParticipantModal, collectionRef, dataBuilder);
+        });
+
+        // --- GENERAL HANDLERS ---
+        async function handleFormSubmit(e, modal, collectionRef, dataBuilder) {
+            if(!collectionRef) return;
+            try {
+                await addDoc(collectionRef, dataBuilder(new FormData(e.target)));
+                e.target.reset();
+                modal.close();
+            } catch (error) {
+                console.error("Error adding document: ", error);
+            }
+        }
+        async function handleUpdateResult(e) {
+            e.preventDefault();
+            const participantId = editResultParticipantId.value;
+            const resultValue = parseFloat(editResultForm.resultValue.value);
+            if (!currentMeetId || !currentEventId || !participantId) return;
+            try {
+                const participantDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId, 'results', participantId);
+                await updateDoc(participantDocRef, { result: resultValue });
+                editResultForm.reset();
+                editResultModal.close();
+            } catch (error) {
+                console.error("Error updating result:", error);
+            }
+        }
+        async function handleDeleteEvent() {
+            if (!currentMeetId || !currentEventId) return;
+            try {
+                const eventDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId);
+                const resultsColRef = collection(eventDocRef, 'results');
+                const resultsSnapshot = await getDocs(resultsColRef);
+                const batch = writeBatch(db);
+                resultsSnapshot.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                await deleteDoc(eventDocRef);
+                showView('events');
+                currentEventId = null;
+            } catch(error) {
+                console.error("Error deleting event:", error);
+            } finally {
+                deleteConfirmModal.close();
+            }
+        }
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    parsedCsvData = results;
+                    const headers = results.meta.fields;
+                    [csvAthleteNameSelect, csvHouseGroupSelect].forEach(sel => sel.innerHTML = '');
+                    headers.forEach(header => {
+                        [csvAthleteNameSelect, csvHouseGroupSelect].forEach(sel => sel.add(new Option(header, header)));
+                    });
+                    const lowerCaseHeaders = headers.map(h => h.toLowerCase());
+                    const nameIndex = lowerCaseHeaders.findIndex(h => h.includes('name') || h.includes('athlete'));
+                    const houseIndex = lowerCaseHeaders.findIndex(h => h.includes('house'));
+                    if (nameIndex > -1) csvAthleteNameSelect.selectedIndex = nameIndex;
+                    if (houseIndex > -1) csvHouseGroupSelect.selectedIndex = houseIndex;
+                    csvPreviewHead.innerHTML = `<tr>${headers.map(h => `<th class="p-2 font-semibold text-sm">${h}</th>`).join('')}</tr>`;
+                    csvPreviewBody.innerHTML = results.data.slice(0, 5).map(row => `<tr class="border-t border-slate-200">${headers.map(h => `<td class="p-2 text-sm">${row[h] || ''}</td>`).join('')}</tr>`).join('');
+                    csvUploadModal.showModal();
+                },
+                error: error => console.error("Error parsing CSV:", error)
+            });
+            csvFileInput.value = '';
+        }
+        async function handleConfirmCsvImport() {
+            if (!parsedCsvData || !currentMeetId || !currentEventId) return;
+            const nameColumn = csvAthleteNameSelect.value;
+            const houseColumn = csvHouseGroupSelect.value;
+            if (!nameColumn || !houseColumn) return;
+            try {
+                const batch = writeBatch(db);
+                const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId, 'results');
+                parsedCsvData.data.forEach(row => {
+                    const athleteName = row[nameColumn];
+                    const houseGroup = row[houseColumn];
+                    if (athleteName && houseGroup) {
+                        batch.set(doc(resultsCol), { athleteName: athleteName.trim(), houseGroup: houseGroup.trim(), result: null, createdAt: new Date() });
+                    }
+                });
+                await batch.commit();
+                csvUploadModal.close();
+                parsedCsvData = null;
+            } catch (error) {
+                console.error("Error importing participants:", error);
+            }
+        }
+        async function calculateAndRenderHousePoints(meetId) {
+            if(!meetId) return;
+            const housePoints = { Mason: 0, Shepherd: 0, Sumner: 0, Taylor: 0 };
+            const pointsMap = { 1: 5, 2: 3, 3: 1 };
+
+            const eventsSnapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'meets', meetId, 'events'));
+
+            for (const eventDoc of eventsSnapshot.docs) {
+                const event = eventDoc.data();
+                const resultsSnapshot = await getDocs(collection(eventDoc.ref, 'results'));
+                const participants = resultsSnapshot.docs.map(d => d.data());
+                
+                const withResults = participants.filter(p => p.result !== null && p.result !== undefined);
+                if(withResults.length === 0) continue;
+
+                withResults.sort((a, b) => event.type === 'track' ? a.result - b.result : b.result - a.result);
+                
+                if (withResults.length > 0) {
+                    withResults[0].placing = 1;
+                    for (let i = 1; i < withResults.length; i++) {
+                        if (withResults[i].result === withResults[i - 1].result) {
+                            withResults[i].placing = withResults[i - 1].placing;
+                        } else {
+                            withResults[i].placing = i + 1;
+                        }
+                    }
+                }
+
+                withResults.forEach(p => {
+                    if (pointsMap[p.placing] && housePoints.hasOwnProperty(p.houseGroup)) {
+                        housePoints[p.houseGroup] += pointsMap[p.placing];
+                    }
+                });
+            }
+
+            const sortedHouses = Object.entries(housePoints).sort((a, b) => b[1] - a[1]);
+            housePointsList.innerHTML = sortedHouses.map(([name, score]) => {
+                const houseColor = houseColors[name] || { bg: 'bg-gray-400', border: 'border-gray-400' };
+                return `
+                    <li class="flex justify-between items-center p-3 rounded-md border-l-4 ${houseColor.border} bg-slate-50">
+                        <div class="flex items-center">
+                            <span class="font-semibold text-slate-800">${name}</span>
+                        </div>
+                        <span class="font-bold text-xl text-indigo-600">${score}</span>
+                    </li>
+                `;
+            }).join('');
+        }
+        
+        // --- PDF Generation ---
+        function generateResultsPdf() {
+            const doc = new jsPDF();
+            doc.text(`Results for: ${currentEventName}`, 14, 16);
+            doc.text(`Meet: ${currentMeetName}`, 14, 22);
+            
+            const tableData = [];
+            const rows = resultsTableBody.querySelectorAll('tr');
+            rows.forEach(row => {
+                const rowData = [];
+                row.querySelectorAll('td').forEach((cell, index) => {
+                    if (index < 4) { // Only take first 4 columns
+                        rowData.push(cell.innerText);
+                    }
+                });
+                tableData.push(rowData);
+            });
+
+            doc.autoTable({
+                head: [['Placing', 'Athlete Name', 'House', 'Result']],
+                body: tableData,
+                startY: 30
+            });
+            doc.save(`results_${currentEventName.replace(/ /g, '_')}.pdf`);
+        }
+        
+        function generateHousePointsPdf() {
+            const doc = new jsPDF();
+            doc.text(`House Points Summary`, 14, 16);
+             doc.text(`Meet: ${currentMeetName}`, 14, 22);
+
+            const tableData = [];
+            const items = housePointsList.querySelectorAll('li');
+            items.forEach(item => {
+                const name = item.querySelector('span:first-child').innerText;
+                const score = item.querySelector('span:last-child').innerText;
+                tableData.push([name, score]);
+            });
+
+            doc.autoTable({
+                head: [['House', 'Total Points']],
+                body: tableData,
+                startY: 30
+            });
+            doc.save(`house_points_${currentMeetName.replace(/ /g, '_')}.pdf`);
+        }
+
+        // --- NAVIGATION AND INIT ---
+        addMeetBtn.addEventListener('click', () => addMeetModal.showModal());
+        addEventBtn.addEventListener('click', () => addEventModal.showModal());
+        addParticipantBtn.addEventListener('click', () => addParticipantModal.showModal());
+        editResultForm.addEventListener('submit', handleUpdateResult);
+        
+        backToMeetsBtn.addEventListener('click', () => {
+             if (eventsUnsubscribe) { eventsUnsubscribe(); eventsUnsubscribe = null; }
+            currentMeetId = null;
+            showView('meets');
+        });
+        backToEventsBtn.addEventListener('click', () => {
+            if (resultsUnsubscribe) { resultsUnsubscribe(); resultsUnsubscribe = null; }
+            currentEventId = null;
+            showView('events');
+            calculateAndRenderHousePoints(currentMeetId); // Recalculate points on return
+        });
+
+        deleteEventBtn.addEventListener('click', () => {
+            deleteConfirmText.textContent = `This will permanently delete the event "${resultsEventName.textContent}" and all its results. This action cannot be undone.`
+            deleteConfirmModal.showModal();
+        });
+        confirmDeleteBtn.addEventListener('click', handleDeleteEvent);
+        uploadCsvBtn.addEventListener('click', () => csvFileInput.click());
+        csvFileInput.addEventListener('change', handleFileSelect);
+        confirmCsvImport.addEventListener('click', handleConfirmCsvImport);
+        document.querySelectorAll('.cancel-btn').forEach(btn => btn.addEventListener('click', () => btn.closest('dialog').close()));
+        
+        printHousePointsBtn.addEventListener('click', generateHousePointsPdf);
+        printResultsBtn.addEventListener('click', generateResultsPdf);
+
+        async function init() {
+            if (!firebaseConfig || !firebaseConfig.apiKey) {
+                loadingMessage.innerHTML = '<strong>Configuration Incomplete.</strong><br>Firebase config is missing from the HTML file.';
+                loadingEl.querySelector('.loader').classList.add('hidden');
+                return;
+            }
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        await fetchMeets();
+                    } else {
+                        signInAnonymously(auth).catch((error) => {
+                             console.error("Anonymous sign-in failed:", error);
+                             loadingMessage.textContent = 'Error: Could not authenticate. Please check your connection and browser settings.';
+                             loadingEl.querySelector('.loader').classList.add('hidden');
+                        });
+                    }
+                });
+
+                await enableIndexedDbPersistence(db).catch(err => console.warn("Offline persistence not available:", err.code));
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                loadingMessage.textContent = 'Error: Could not connect to the database. Check console for details.';
+                loadingEl.querySelector('.loader').classList.add('hidden');
+            }
+        }
+        
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js').catch(err => console.log('SW registration failed: ', err)));
+        }
+
+        init();
+    </script>
+</body>
+</html>
+
