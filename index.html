@@ -640,7 +640,6 @@
         const printHousePointsBtn = document.getElementById('printHousePointsBtn');
         const printResultsBtn = document.getElementById('printResultsBtn');
         const sortByNameBtn = document.getElementById('sortByNameBtn');
-        const themeToggle = document.getElementById('theme-toggle');
         const maleTab = document.getElementById('maleTab');
         const femaleTab = document.getElementById('femaleTab');
 
@@ -1416,7 +1415,7 @@
                 await enableIndexedDbPersistence(db).catch(err => console.warn("Offline persistence not available:", err.code));
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
-                loadingMessage.textContent = 'Error: Could not connect to the database. Check console for details.';
+                loadingMessage.textContent = 'Error: Could not connect to the database. Check console for details and verify Firebase settings.';
                 loadingEl.querySelector('.loader').classList.add('hidden');
             }
         }
