@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Athletics Event Recorder</title>
+    <title>BIDD SPORTS</title>
     <!-- Link to the Web App Manifest -->
     <link rel="manifest" href="manifest.json">
     <!-- Theme color for the browser address bar -->
@@ -44,6 +44,18 @@
 </head>
 <body class="bg-slate-100 text-slate-800">
 
+    <!-- 
+      Tailwind CSS Safelist:
+      This hidden block contains all the dynamically generated color classes for the house themes.
+      It ensures that Tailwind's JIT compiler includes these styles in the final CSS.
+    -->
+    <div class="hidden">
+        <span class="bg-yellow-200 text-yellow-800 border-yellow-400"></span>
+        <span class="bg-green-200 text-green-800 border-green-400"></span>
+        <span class="bg-red-200 text-red-800 border-red-400"></span>
+        <span class="bg-blue-200 text-blue-800 border-blue-400"></span>
+    </div>
+
     <!-- Main Application Container -->
     <div id="app" class="container mx-auto p-4 md:p-6 max-w-7xl">
 
@@ -51,8 +63,8 @@
         <header class="flex items-center gap-4 md:gap-6 mb-6 md:mb-8">
             <img id="schoolLogo" src="HurunuiCollegeLogoRefresh-07%20large.png" alt="School Logo" class="w-20 h-20 md:w-24 md:h-24 rounded-lg object-contain shadow-md">
             <div>
-                <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Athletics Meet Dashboard</h1>
-                <p class="text-slate-600 mt-1">Manage events and track results in real-time. Now with offline support!</p>
+                <h1 class="text-3xl md:text-4xl font-bold text-slate-900">BIDD SPORTS</h1>
+                <p class="text-slate-600 mt-1">Your official tool for managing athletics meets.</p>
             </div>
         </header>
 
