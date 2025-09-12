@@ -108,7 +108,7 @@
                             Print Points
                         </button>
                     </div>
-                     <p class="text-sm text-slate-500 mb-4">Points are awarded for 1st (5), 2nd (3), and 3rd (1) place.</p>
+                     <p class="text-sm text-slate-500 mb-4">Placing: 1st (5), 2nd (3), 3rd (1). Participation: 1 point per athlete.</p>
                     <ol id="housePointsList" class="space-y-3">
                         <!-- House points will be dynamically inserted here -->
                     </ol>
@@ -218,9 +218,13 @@
                         <option value="field">Field (higher score is better)</option>
                     </select>
                 </div>
-                <div class="mb-6">
+                 <div class="mb-4">
                     <label for="eventUnits" class="block text-sm font-medium text-slate-700">Units</label>
                     <input type="text" id="eventUnits" name="eventUnits" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., s, m, cm" required>
+                </div>
+                <div class="mb-6">
+                    <label for="eventRecord" class="block text-sm font-medium text-slate-700">Current Record (Optional)</label>
+                    <input type="number" step="any" id="eventRecord" name="eventRecord" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
                 <div class="flex justify-end gap-3">
                     <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
@@ -242,7 +246,7 @@
                     <label for="houseGroup" class="block text-sm font-medium text-slate-700">House Group</label>
                     <select id="houseGroup" name="houseGroup" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" required>
                         <option value="Mason">Mason</option>
-                        <option value="Shepherd">Shepherd</option>
+                        <option value="Sheppard">Sheppard</option>
                         <option value="Sumner">Sumner</option>
                         <option value="Taylor">Taylor</option>
                     </select>
@@ -277,10 +281,14 @@
         <div class="modal-content bg-white p-6 rounded-lg">
             <h3 class="text-xl font-bold mb-4">Import Participants from CSV</h3>
             <p class="text-slate-600 mb-4">Map the columns from your CSV file to the required fields.</p>
-            <div id="csvMapping" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div id="csvMapping" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
-                    <label for="csvAthleteName" class="block text-sm font-medium text-slate-700">Athlete Name Column</label>
-                    <select id="csvAthleteName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></select>
+                    <label for="csvFirstName" class="block text-sm font-medium text-slate-700">First Name Column</label>
+                    <select id="csvFirstName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></select>
+                </div>
+                <div>
+                    <label for="csvSurname" class="block text-sm font-medium text-slate-700">Surname Column</label>
+                    <select id="csvSurname" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></select>
                 </div>
                 <div>
                     <label for="csvHouseGroup" class="block text-sm font-medium text-slate-700">House Group Column</label>
@@ -327,6 +335,7 @@
             deleteDoc,
             writeBatch,
             getDocs,
+            getDoc,
             enableIndexedDbPersistence
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
@@ -352,17 +361,16 @@
         let currentEventId = null;
         let currentMeetName = '';
         let currentEventName = '';
+        let currentEvent = null;
 
         let meetsUnsubscribe = null;
         let eventsUnsubscribe = null;
         let resultsUnsubscribe = null;
         let parsedCsvData = null;
         
-        const { jsPDF } = window.jspdf;
-
         const houseColors = {
             'Mason': { bg: 'bg-yellow-200', text: 'text-yellow-800', border: 'border-yellow-400' },
-            'Shepherd': { bg: 'bg-green-200', text: 'text-green-800', border: 'border-green-400' },
+            'Sheppard': { bg: 'bg-green-200', text: 'text-green-800', border: 'border-green-400' },
             'Sumner': { bg: 'bg-red-200', text: 'text-red-800', border: 'border-red-400' },
             'Taylor': { bg: 'bg-blue-200', text: 'text-blue-800', border: 'border-blue-400' }
         };
@@ -411,7 +419,8 @@
         const csvFileInput = document.getElementById('csvFileInput');
         const csvUploadModal = document.getElementById('csvUploadModal');
         const confirmCsvImport = document.getElementById('confirmCsvImport');
-        const csvAthleteNameSelect = document.getElementById('csvAthleteName');
+        const csvFirstNameSelect = document.getElementById('csvFirstName');
+        const csvSurnameSelect = document.getElementById('csvSurname');
         const csvHouseGroupSelect = document.getElementById('csvHouseGroup');
         const csvPreviewHead = document.getElementById('csvPreviewHead');
         const csvPreviewBody = document.getElementById('csvPreviewBody');
@@ -452,7 +461,6 @@
                     eventsTitle.textContent = `Events: ${meet.name}`;
                     showView('events');
                     fetchEvents(meet.id);
-                    calculateAndRenderHousePoints(meet.id);
                 });
                 meetsGrid.appendChild(card);
             });
@@ -494,15 +502,17 @@
                 card.addEventListener('click', () => {
                     currentEventId = event.id;
                     currentEventName = event.name;
+                    currentEvent = event;
                     resultsEventName.textContent = event.name;
-                    resultsEventInfo.textContent = `Results in ${event.units}. ${event.type === 'track' ? 'Lower is better.' : 'Higher is better.'}`;
+                    resultsEventInfo.textContent = `Results in ${event.units}. ${event.record ? `Record: ${event.record}${event.units}` : ''}`;
                     showView('results');
-                    fetchResults(currentMeetId, event.id, event.type);
+                    fetchResults(currentMeetId, event.id, event);
                 });
                 eventsGrid.appendChild(card);
             });
         }
         async function fetchEvents(meetId) {
+            calculateAndRenderHousePoints(meetId);
             if (eventsUnsubscribe) eventsUnsubscribe();
             const eventsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', meetId, 'events');
             eventsUnsubscribe = onSnapshot(query(eventsCol), snapshot => {
@@ -516,17 +526,35 @@
             e.preventDefault();
             if(!currentMeetId) return;
             const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events');
-            const dataBuilder = fd => ({ name: fd.get('eventName'), type: fd.get('eventType'), units: fd.get('eventUnits') });
+            const dataBuilder = fd => ({ 
+                name: fd.get('eventName'), 
+                type: fd.get('eventType'), 
+                units: fd.get('eventUnits'),
+                record: parseFloat(fd.get('eventRecord')) || null
+            });
             handleFormSubmit(e, addEventModal, collectionRef, dataBuilder);
         });
 
         // --- PARTICIPANT/RESULT FUNCTIONS ---
-        function renderParticipants(participants, eventType) {
+        function renderParticipants(participants, event) {
+            const eventType = event.type;
+            const eventRecord = event.record;
             const withResults = participants.filter(p => p.result !== null && p.result !== undefined);
             const withoutResults = participants.filter(p => p.result === null || p.result === undefined);
             withResults.sort((a, b) => eventType === 'track' ? a.result - b.result : b.result - a.result);
+            
+            let isNewRecord = false;
+
             if (withResults.length > 0) {
                 withResults[0].placing = 1;
+                 // Check for new record
+                if(eventRecord) {
+                    const topResult = withResults[0].result;
+                    if(eventType === 'track' && topResult < eventRecord) isNewRecord = true;
+                    if(eventType === 'field' && topResult > eventRecord) isNewRecord = true;
+                }
+                if(isNewRecord) withResults[0].isRecord = true;
+
                 for (let i = 1; i < withResults.length; i++) {
                     if (withResults[i].result === withResults[i - 1].result) {
                         withResults[i].placing = withResults[i - 1].placing;
@@ -548,8 +576,12 @@
             const row = document.createElement('tr');
             row.className = 'border-b border-slate-200 hover:bg-slate-50';
             const hasResult = participant.result !== null && participant.result !== undefined;
-            const displayResult = hasResult ? (eventType === 'track' ? formatTime(participant.result) : participant.result) : 'N/A';
+            let displayResult = hasResult ? (eventType === 'track' ? formatTime(participant.result) : participant.result) : 'N/A';
             
+            if (participant.isRecord) {
+                displayResult += ` <span class="ml-2 text-amber-500 font-bold">🏆 New Record!</span>`;
+            }
+
             const houseColor = houseColors[participant.houseGroup] || { bg: 'bg-gray-200', text: 'text-gray-800' };
             const houseBadge = `<span class="px-2 py-1 text-xs font-semibold leading-tight rounded-full ${houseColor.bg} ${houseColor.text}">${participant.houseGroup}</span>`;
             
@@ -566,12 +598,12 @@
             row.cells[4].appendChild(actionButton);
             return row;
         }
-        async function fetchResults(meetId, eventId, eventType) {
+        async function fetchResults(meetId, eventId, event) {
             if (resultsUnsubscribe) resultsUnsubscribe();
             const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', meetId, 'events', eventId, 'results');
             resultsUnsubscribe = onSnapshot(query(resultsCol), snapshot => {
                 const participants = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderParticipants(participants, eventType);
+                renderParticipants(participants, event);
             }, error => console.error(`Error fetching results for event ${eventId}:`, error));
         }
         addParticipantForm.addEventListener('submit', (e) => {
@@ -601,6 +633,25 @@
             try {
                 const participantDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId, 'results', participantId);
                 await updateDoc(participantDocRef, { result: resultValue });
+
+                // Check for and update new record
+                const eventDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId);
+                const resultsColRef = collection(eventDocRef, 'results');
+                const resultsSnapshot = await getDocs(resultsColRef);
+                const participants = resultsSnapshot.docs.map(d => d.data());
+                const withResults = participants.filter(p => p.result !== null && p.result !== undefined);
+                
+                if (withResults.length > 0) {
+                    withResults.sort((a, b) => currentEvent.type === 'track' ? a.result - b.result : b.result - a.result);
+                    const topResult = withResults[0].result;
+                    const isNewRecord = (currentEvent.type === 'track' && topResult < currentEvent.record) || 
+                                      (currentEvent.type === 'field' && topResult > currentEvent.record) ||
+                                      (currentEvent.record === null && topResult !== null);
+                    if (isNewRecord) {
+                        await updateDoc(eventDocRef, { record: topResult });
+                    }
+                }
+
                 editResultForm.reset();
                 editResultModal.close();
             } catch (error) {
@@ -634,14 +685,16 @@
                 complete: function(results) {
                     parsedCsvData = results;
                     const headers = results.meta.fields;
-                    [csvAthleteNameSelect, csvHouseGroupSelect].forEach(sel => sel.innerHTML = '');
+                    [csvFirstNameSelect, csvSurnameSelect, csvHouseGroupSelect].forEach(sel => sel.innerHTML = '');
                     headers.forEach(header => {
-                        [csvAthleteNameSelect, csvHouseGroupSelect].forEach(sel => sel.add(new Option(header, header)));
+                        [csvFirstNameSelect, csvSurnameSelect, csvHouseGroupSelect].forEach(sel => sel.add(new Option(header, header)));
                     });
                     const lowerCaseHeaders = headers.map(h => h.toLowerCase());
-                    const nameIndex = lowerCaseHeaders.findIndex(h => h.includes('name') || h.includes('athlete'));
+                    const firstNameIndex = lowerCaseHeaders.findIndex(h => h.includes('first') || h.includes('given'));
+                    const surnameIndex = lowerCaseHeaders.findIndex(h => h.includes('last') || h.includes('surname'));
                     const houseIndex = lowerCaseHeaders.findIndex(h => h.includes('house'));
-                    if (nameIndex > -1) csvAthleteNameSelect.selectedIndex = nameIndex;
+                    if (firstNameIndex > -1) csvFirstNameSelect.selectedIndex = firstNameIndex;
+                    if (surnameIndex > -1) csvSurnameSelect.selectedIndex = surnameIndex;
                     if (houseIndex > -1) csvHouseGroupSelect.selectedIndex = houseIndex;
                     csvPreviewHead.innerHTML = `<tr>${headers.map(h => `<th class="p-2 font-semibold text-sm">${h}</th>`).join('')}</tr>`;
                     csvPreviewBody.innerHTML = results.data.slice(0, 5).map(row => `<tr class="border-t border-slate-200">${headers.map(h => `<td class="p-2 text-sm">${row[h] || ''}</td>`).join('')}</tr>`).join('');
@@ -653,17 +706,25 @@
         }
         async function handleConfirmCsvImport() {
             if (!parsedCsvData || !currentMeetId || !currentEventId) return;
-            const nameColumn = csvAthleteNameSelect.value;
+            const firstNameColumn = csvFirstNameSelect.value;
+            const surnameColumn = csvSurnameSelect.value;
             const houseColumn = csvHouseGroupSelect.value;
-            if (!nameColumn || !houseColumn) return;
+            
+            if (!firstNameColumn || !surnameColumn || !houseColumn) {
+                alert("Please map the First Name, Surname, and House Group columns.");
+                return;
+            }
+
             try {
                 const batch = writeBatch(db);
                 const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId, 'results');
                 parsedCsvData.data.forEach(row => {
-                    const athleteName = row[nameColumn];
+                    const firstName = row[firstNameColumn];
+                    const surname = row[surnameColumn];
                     const houseGroup = row[houseColumn];
-                    if (athleteName && houseGroup) {
-                        batch.set(doc(resultsCol), { athleteName: athleteName.trim(), houseGroup: houseGroup.trim(), result: null, createdAt: new Date() });
+                    if (firstName && surname && houseGroup) {
+                        const athleteName = `${firstName.trim()} ${surname.trim()}`;
+                        batch.set(doc(resultsCol), { athleteName: athleteName, houseGroup: houseGroup.trim(), result: null, createdAt: new Date() });
                     }
                 });
                 await batch.commit();
@@ -675,8 +736,9 @@
         }
         async function calculateAndRenderHousePoints(meetId) {
             if(!meetId) return;
-            const housePoints = { Mason: 0, Shepherd: 0, Sumner: 0, Taylor: 0 };
+            const housePoints = { Mason: 0, Sheppard: 0, Sumner: 0, Taylor: 0 };
             const pointsMap = { 1: 5, 2: 3, 3: 1 };
+            const participationPoint = 1;
 
             const eventsSnapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'meets', meetId, 'events'));
 
@@ -685,6 +747,12 @@
                 const resultsSnapshot = await getDocs(collection(eventDoc.ref, 'results'));
                 const participants = resultsSnapshot.docs.map(d => d.data());
                 
+                participants.forEach(p => {
+                    if (housePoints.hasOwnProperty(p.houseGroup)) {
+                        housePoints[p.houseGroup] += participationPoint;
+                    }
+                });
+
                 const withResults = participants.filter(p => p.result !== null && p.result !== undefined);
                 if(withResults.length === 0) continue;
 
@@ -724,6 +792,11 @@
         
         // --- PDF Generation ---
         function generateResultsPdf() {
+            if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+                alert("Error: PDF generation library not loaded. Please check your internet connection and refresh.");
+                return;
+            }
+            const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             doc.text(`Results for: ${currentEventName}`, 14, 16);
             doc.text(`Meet: ${currentMeetName}`, 14, 22);
@@ -749,6 +822,11 @@
         }
         
         function generateHousePointsPdf() {
+            if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+                alert("Error: PDF generation library not loaded. Please check your internet connection and refresh.");
+                return;
+            }
+            const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             doc.text(`House Points Summary`, 14, 16);
              doc.text(`Meet: ${currentMeetName}`, 14, 22);
@@ -784,11 +862,11 @@
             if (resultsUnsubscribe) { resultsUnsubscribe(); resultsUnsubscribe = null; }
             currentEventId = null;
             showView('events');
-            calculateAndRenderHousePoints(currentMeetId); // Recalculate points on return
+            calculateAndRenderHousePoints(currentMeetId);
         });
 
         deleteEventBtn.addEventListener('click', () => {
-            deleteConfirmText.textContent = `This will permanently delete the event "${resultsEventName.textContent}" and all its results. This action cannot be undone.`
+            deleteConfirmText.textContent = `This will permanently delete the event "${currentEventName}" and all its results. This action cannot be undone.`
             deleteConfirmModal.showModal();
         });
         confirmDeleteBtn.addEventListener('click', handleDeleteEvent);
