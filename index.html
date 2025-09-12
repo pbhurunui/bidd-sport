@@ -85,6 +85,7 @@
                         + Add Meet
                     </button>
                 </div>
+                 <p class="text-slate-500 mb-4 -mt-2">Select a meet to view its events or create a new one.</p>
                 <div id="meetsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- Meet cards will be inserted here -->
                 </div>
@@ -104,8 +105,8 @@
                 <div id="housePointsContainer" class="mb-8 bg-white p-6 rounded-lg shadow-lg">
                     <div class="flex justify-between items-center mb-2">
                         <h2 id="housePointsTitle" class="text-2xl font-semibold text-slate-800">House Points</h2>
-                        <button id="printHousePointsBtn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200">
-                            Print Points
+                        <button id="printHousePointsBtn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                            Loading...
                         </button>
                     </div>
                      <p class="text-sm text-slate-500 mb-4">Placing: 1st (5), 2nd (3), 3rd (1). Participation: 1 point per athlete.</p>
@@ -120,6 +121,7 @@
                         + Add Event
                     </button>
                 </div>
+                 <p class="text-slate-500 mb-4 -mt-2">Click on an event to view results, or add a new event for this meet.</p>
                 <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- Event cards will be inserted here -->
                 </div>
@@ -143,8 +145,8 @@
                             <p id="resultsEventInfo" class="text-slate-500"></p>
                         </div>
                         <div class="flex gap-2 flex-wrap justify-end">
-                             <button id="printResultsBtn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200">
-                                Print Results
+                             <button id="printResultsBtn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                                Loading...
                             </button>
                             <input type="file" id="csvFileInput" class="hidden" accept=".csv">
                             <button id="uploadCsvBtn" class="bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-700 transition duration-200">
@@ -155,7 +157,7 @@
                             </button>
                         </div>
                     </div>
-                    
+                     <p class="text-slate-500 mb-4 -mt-2">Add participants manually or upload a CSV. Click actions to add/edit results or edit athlete details.</p>
                     <div id="resultsContainer" class="overflow-x-auto">
                         <table class="w-full text-left min-w-[600px]">
                             <thead class="bg-slate-50 border-b border-slate-200">
@@ -229,9 +231,19 @@
                     <label for="eventUnits" class="block text-sm font-medium text-slate-700">Units</label>
                     <input type="text" id="eventUnits" name="eventUnits" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., s, m, cm" required>
                 </div>
-                <div class="mb-6">
-                    <label for="eventRecord" class="block text-sm font-medium text-slate-700">Current Record (Optional)</label>
-                    <input type="number" step="any" id="eventRecord" name="eventRecord" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="col-span-1">
+                        <label for="eventRecord" class="block text-sm font-medium text-slate-700">Record</label>
+                        <input type="number" step="any" id="eventRecord" name="eventRecord" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
+                    </div>
+                    <div class="col-span-2">
+                        <label for="recordHolder" class="block text-sm font-medium text-slate-700">Record Holder</label>
+                        <input type="text" id="recordHolder" name="recordHolder" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
+                    </div>
+                    <div class="col-span-1">
+                         <label for="recordYear" class="block text-sm font-medium text-slate-700">Year</label>
+                        <input type="number" id="recordYear" name="recordYear" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
+                    </div>
                 </div>
                 <div class="flex justify-end gap-3">
                     <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
@@ -546,7 +558,18 @@
                     currentEvent = event;
                     currentSortOrder = 'placing'; // Reset sort order when viewing an event
                     resultsEventName.textContent = event.name;
-                    let recordText = event.record ? `Record: ${event.type === 'track' ? formatTime(event.record) : event.record}${event.units}` : '';
+                    let recordText = '';
+                    if (event.record) {
+                        const formattedRecord = event.type === 'track' ? formatTime(event.record) : event.record;
+                        recordText = `Record: ${formattedRecord}${event.units}`;
+                        if (event.recordHolder) {
+                            recordText += ` (${event.recordHolder}`;
+                            if (event.recordYear) {
+                                recordText += `, ${event.recordYear}`;
+                            }
+                            recordText += ')';
+                        }
+                    }
                     resultsEventInfo.textContent = `Results in ${event.units}. ${recordText}`;
                     showView('results');
                     fetchResults(currentMeetId, event.id, event);
@@ -573,7 +596,9 @@
                 name: fd.get('eventName'), 
                 type: fd.get('eventType'), 
                 units: fd.get('eventUnits'),
-                record: parseFloat(fd.get('eventRecord')) || null
+                record: parseFloat(fd.get('eventRecord')) || null,
+                recordHolder: fd.get('recordHolder') || null,
+                recordYear: parseInt(fd.get('recordYear')) || null
             });
             handleFormSubmit(e, addEventModal, collectionRef, dataBuilder);
         });
@@ -729,18 +754,21 @@
                 const eventDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId);
                 const resultsColRef = collection(eventDocRef, 'results');
                 const resultsSnapshot = await getDocs(resultsColRef);
-                const participants = resultsSnapshot.docs.map(d => d.data());
+                const participants = resultsSnapshot.docs.map(d => ({id: d.id, ...d.data()}));
                 const withResults = participants.filter(p => p.result !== null && p.result !== undefined);
                 
                 if (withResults.length > 0) {
                     withResults.sort((a, b) => currentEvent.type === 'track' ? a.result - b.result : b.result - a.result);
                     const topResult = withResults[0].result;
-                    const isNewRecord = (currentEvent.record && (
-                                          (currentEvent.type === 'track' && topResult < currentEvent.record) || 
-                                          (currentEvent.type === 'field' && topResult > currentEvent.record)
-                                      )) || (!currentEvent.record && topResult !== null);
+                    const isNewRecord = (currentEvent.record && ((currentEvent.type === 'track' && topResult < currentEvent.record) || (currentEvent.type === 'field' && topResult > currentEvent.record))) || (!currentEvent.record && topResult !== null);
+                    
                     if (isNewRecord) {
-                        await updateDoc(eventDocRef, { record: topResult });
+                        const recordBreaker = withResults.find(p => p.result === topResult);
+                        await updateDoc(eventDocRef, { 
+                            record: topResult,
+                            recordHolder: recordBreaker.athleteName,
+                            recordYear: new Date().getFullYear()
+                        });
                     }
                 }
 
@@ -884,10 +912,6 @@
         
         // --- PDF Generation ---
         function generateResultsPdf() {
-            if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
-                alert("Error: PDF generation library not loaded. Please check your internet connection and refresh.");
-                return;
-            }
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             doc.text(`Results for: ${currentEventName}`, 14, 16);
@@ -914,10 +938,6 @@
         }
         
         function generateHousePointsPdf() {
-            if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
-                alert("Error: PDF generation library not loaded. Please check your internet connection and refresh.");
-                return;
-            }
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             doc.text(`House Points Summary`, 14, 16);
@@ -951,11 +971,11 @@
             currentMeetId = null;
             showView('meets');
         });
-        backToEventsBtn.addEventListener('click', () => {
+        backToEventsBtn.addEventListener('click', async () => {
             if (resultsUnsubscribe) { resultsUnsubscribe(); resultsUnsubscribe = null; }
             currentEventId = null;
             showView('events');
-            calculateAndRenderHousePoints(currentMeetId);
+            await calculateAndRenderHousePoints(currentMeetId);
         });
 
         deleteEventBtn.addEventListener('click', () => {
@@ -976,7 +996,22 @@
             renderParticipants(currentParticipants, currentEvent);
         });
 
+        function enablePrintButtons() {
+            printHousePointsBtn.disabled = false;
+            printHousePointsBtn.textContent = 'Print Points';
+            printResultsBtn.disabled = false;
+            printResultsBtn.textContent = 'Print Results';
+        }
+
         async function init() {
+            // This interval will check for the PDF libraries and enable the print buttons when they are ready.
+            const pdfLibraryCheck = setInterval(() => {
+                if (typeof window.jspdf !== 'undefined' && typeof window.jspdf.jsPDF !== 'undefined' && typeof window.jspdf.autoTable !== 'undefined') {
+                    enablePrintButtons();
+                    clearInterval(pdfLibraryCheck);
+                }
+            }, 100);
+
             if (!firebaseConfig || !firebaseConfig.apiKey) {
                 loadingMessage.innerHTML = '<strong>Configuration Incomplete.</strong><br>Firebase config is missing from the HTML file.';
                 loadingEl.querySelector('.loader').classList.add('hidden');
@@ -1009,7 +1044,13 @@
         }
         
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js').catch(err => console.log('SW registration failed: ', err)));
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js').then(reg => {
+                    console.log('Service worker registered successfully:', reg);
+                }).catch(err => {
+                    console.log('Service worker registration failed: ', err);
+                });
+            });
         }
 
         init();
