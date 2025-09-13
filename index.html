@@ -127,9 +127,6 @@
                 <div class="flex justify-between items-center mb-4">
                     <h2 id="eventsTitle" class="text-2xl font-semibold text-slate-800">Events</h2>
                     <div class="flex gap-2">
-                         <button id="uploadCsvEventsBtn" class="bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-700 transition duration-200">
-                            Import Participants
-                        </button>
                          <button id="shareLinkBtn" class="bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-700 transition duration-200">
                             Share Sign-up Link
                         </button>
@@ -138,7 +135,10 @@
                         </button>
                     </div>
                 </div>
-                 <p class="text-slate-500 mb-4 -mt-2">Click on an event to view results, or add a new event for this competition.</p>
+                 <p class="text-slate-500 mb-2 -mt-2">Click on an event to view results, or add a new event for this competition.</p>
+                <div class="mb-4">
+                    <input type="search" id="eventSearchInput" placeholder="Search for an event..." class="w-full px-4 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
                 <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- Event cards will be inserted here -->
                 </div>
@@ -171,6 +171,10 @@
                             </button>
                              <button id="printResultsBtn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
                                 Loading...
+                            </button>
+                            <input type="file" id="csvFileInput" class="hidden" accept=".csv">
+                            <button id="uploadCsvBtn" class="bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-700 transition duration-200">
+                                Upload CSV
                             </button>
                             <button id="addParticipantBtn" class="bg-teal-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-teal-700 transition duration-200">
                                 + Add Participant
@@ -244,41 +248,13 @@
         <div class="modal-content bg-white p-6 rounded-lg">
             <h3 class="text-xl font-bold mb-4">Add New Competition</h3>
             <form id="addMeetForm">
-                <div class="mb-4">
+                <div class="mb-6">
                     <label for="meetName" class="block text-sm font-medium text-slate-700">Competition Name</label>
                     <input type="text" id="meetName" name="meetName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" placeholder="e.g., Annual Sports Day 2025" required>
-                </div>
-                <div class="mb-6">
-                    <label for="ageGroups" class="block text-sm font-medium text-slate-700">Age Groups (one per line)</label>
-                    <textarea id="ageGroups" name="ageGroups" rows="4" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" placeholder="U10&#10;U12&#10;U14&#10;Senior"></textarea>
                 </div>
                 <div class="flex justify-end gap-3">
                     <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
                     <button type="submit" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Create Competition</button>
-                </div>
-            </form>
-        </div>
-    </dialog>
-
-    <dialog id="editMeetModal" class="modal p-0 rounded-lg shadow-xl max-w-md w-full">
-        <div class="modal-content bg-white p-6 rounded-lg">
-            <h3 class="text-xl font-bold mb-4">Edit Competition</h3>
-            <form id="editMeetForm">
-                <input type="hidden" id="editMeetId" name="meetId">
-                <div class="mb-4">
-                    <label for="editMeetName" class="block text-sm font-medium text-slate-700">Competition Name</label>
-                    <input type="text" id="editMeetName" name="meetName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" required>
-                </div>
-                <div class="mb-6">
-                    <label for="editAgeGroups" class="block text-sm font-medium text-slate-700">Age Groups (one per line)</label>
-                    <textarea id="editAgeGroups" name="ageGroups" rows="4" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm"></textarea>
-                </div>
-                <div class="flex justify-between items-center">
-                    <button type="button" id="deleteMeetBtn" class="bg-red-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-red-700 transition">Delete</button>
-                    <div class="flex gap-3">
-                        <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
-                        <button type="submit" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Save Changes</button>
-                    </div>
                 </div>
             </form>
         </div>
@@ -303,7 +279,12 @@
                  <div class="mb-4">
                     <label for="ageGroup" class="block text-sm font-medium text-slate-700">Age Group</label>
                     <select id="ageGroup" name="ageGroup" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" required>
-                        <!-- Options will be populated dynamically -->
+                        <option value="U10">U10</option>
+                        <option value="U12">U12</option>
+                        <option value="U14">U14</option>
+                        <option value="U16">U16</option>
+                        <option value="Senior">Senior</option>
+                        <option value="Open">Open</option>
                     </select>
                 </div>
                  <div class="mb-4">
@@ -376,7 +357,12 @@
                  <div class="mb-4">
                     <label for="editAgeGroup" class="block text-sm font-medium text-slate-700">Age Group</label>
                     <select id="editAgeGroup" name="ageGroup" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" required>
-                        <!-- Options will be populated dynamically -->
+                        <option value="U10">U10</option>
+                        <option value="U12">U12</option>
+                        <option value="U14">U14</option>
+                        <option value="U16">U16</option>
+                        <option value="Senior">Senior</option>
+                        <option value="Open">Open</option>
                     </select>
                 </div>
                  <div class="mb-4">
@@ -633,15 +619,14 @@
         // =====================================================================================
         // ======================== IMPORTANT FIREBASE SETUP ===================================
         // =====================================================================================
-       const firebaseConfig = {
-          apiKey: "AIzaSyA2BPCoA6qWKYLXBfpjhzvaTn4HyC03sE4",
-          authDomain: "bidd-sports.firebaseapp.com",
-          projectId: "bidd-sports",
-          storageBucket: "bidd-sports.firebasestorage.app",
-          messagingSenderId: "863210699877",
-          appId: "1:863210699877:web:84d08bb519ae1aeb7eda8c"
+        const firebaseConfig = {
+            apiKey: "AIzaSyA2BPCoA6qWKYLXBfpjhzvaTn4HyC03sE4",
+            authDomain: "bidd-sports.firebaseapp.com",
+            projectId: "bidd-sports",
+            storageBucket: "bidd-sports.appspot.com",
+            messagingSenderId: "863210699877",
+            appId: "1:863210699877:web:84d08bb519ae1aeb7eda8c"
         };
-
         const appId = "bidd-sports";
         // =====================================================================================
         // ======================== END OF SETUP SECTION =======================================
@@ -651,14 +636,13 @@
         let userId;
         let currentMeetId = null;
         let currentEventId = null;
-        let currentMeet = null;
         let currentMeetName = '';
         let currentEventName = '';
         let currentEvent = null;
         let currentParticipants = [];
         let currentSortOrder = 'placing'; // 'placing' or 'alphabetical'
         let currentGenderView = 'Male';
-        let deleteContext = null; // { type: 'event'/'participant'/'meet', id: '...' }
+        let deleteContext = null; // { type: 'event'/'participant', id: '...' }
 
         let meetsUnsubscribe = null;
         let eventsUnsubscribe = null;
@@ -682,9 +666,6 @@
         const addMeetBtn = document.getElementById('addMeetBtn');
         const addMeetModal = document.getElementById('addMeetModal');
         const addMeetForm = document.getElementById('addMeetForm');
-        const editMeetModal = document.getElementById('editMeetModal');
-        const editMeetForm = document.getElementById('editMeetForm');
-        const deleteMeetBtn = document.getElementById('deleteMeetBtn');
 
         const eventsView = document.getElementById('eventsView');
         const eventsGrid = document.getElementById('eventsGrid');
@@ -695,6 +676,7 @@
         const addEventForm = document.getElementById('addEventForm');
         const editEventModal = document.getElementById('editEventModal');
         const editEventForm = document.getElementById('editEventForm');
+        const eventSearchInput = document.getElementById('eventSearchInput');
         
         const shareLinkBtn = document.getElementById('shareLinkBtn');
         const shareLinkModal = document.getElementById('shareLinkModal');
@@ -751,7 +733,6 @@
         const csvFirstNameSelect = document.getElementById('csvFirstName');
         const csvSurnameSelect = document.getElementById('csvSurname');
         const csvGenderSelect = document.getElementById('csvGender');
-        const csvAgeGroupSelect = document.getElementById('csvAgeGroup');
         const csvHouseGroupSelect = document.getElementById('csvHouseGroup');
         const csvPreviewHead = document.getElementById('csvPreviewHead');
         const csvPreviewBody = document.getElementById('csvPreviewBody');
@@ -791,34 +772,16 @@
             noMeetsMessage.classList.toggle('hidden', meets.length > 0);
             meets.forEach(meet => {
                 const card = document.createElement('div');
-                card.className = 'bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow relative';
-                
-                const cardContent = document.createElement('div');
-                cardContent.className = 'cursor-pointer';
-                cardContent.innerHTML = `<h3 class="text-xl font-bold text-slate-800 truncate">${meet.name}</h3>`;
-                cardContent.addEventListener('click', () => {
+                card.className = 'bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer';
+                card.innerHTML = `<h3 class="text-xl font-bold text-slate-800 truncate">${meet.name}</h3>`;
+                card.addEventListener('click', () => {
                     currentMeetId = meet.id;
                     currentMeetName = meet.name;
-                    currentMeet = meet;
                     housePointsTitle.textContent = `Team Points: ${meet.name}`;
                     eventsTitle.textContent = `Events: ${meet.name}`;
                     showView('events');
                     fetchEvents(meet.id);
                 });
-
-                const editBtn = document.createElement('button');
-                editBtn.className = 'absolute top-2 right-2 p-1 rounded-full hover:bg-slate-200';
-                editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>`;
-                editBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    editMeetForm.elements.meetId.value = meet.id;
-                    editMeetForm.elements.meetName.value = meet.name;
-                    editMeetForm.elements.ageGroups.value = (meet.ageGroups || []).join('\n');
-                    editMeetModal.showModal();
-                });
-
-                card.appendChild(editBtn);
-                card.appendChild(cardContent);
                 meetsGrid.appendChild(card);
             });
         }
@@ -839,33 +802,14 @@
         addMeetForm.addEventListener('submit', (e) => {
              e.preventDefault();
              const formData = new FormData(e.target);
-             const ageGroups = formData.get('ageGroups').split('\n').map(s => s.trim()).filter(Boolean);
-             const newMeet = { name: formData.get('meetName'), ageGroups, createdAt: new Date() };
+             const newMeet = { name: formData.get('meetName'), createdAt: new Date() };
              const meetsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets');
              addDoc(meetsCol, newMeet).then(() => {
                 e.target.reset();
                 addMeetModal.close();
              }).catch(err => console.error("Error adding meet:", err));
         });
-        
-        async function handleUpdateMeet(e) {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const meetId = formData.get('meetId');
-            const ageGroups = formData.get('ageGroups').split('\n').map(s => s.trim()).filter(Boolean);
-            const updatedMeet = {
-                name: formData.get('meetName'),
-                ageGroups
-            };
-            const meetDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', meetId);
-            try {
-                await updateDoc(meetDocRef, updatedMeet);
-                editMeetModal.close();
-            } catch (error) {
-                console.error("Error updating meet:", error);
-            }
-        }
-        
+
         // --- EVENT FUNCTIONS ---
         let allEvents = [];
         function renderEvents(events) {
@@ -921,15 +865,7 @@
                     editEventForm.elements.eventId.value = event.id;
                     editEventForm.elements.eventName.value = event.name;
                     editEventForm.elements.eventType.value = event.eventType;
-                    
-                    const ageGroupSelect = editEventForm.elements.ageGroup;
-                    ageGroupSelect.innerHTML = '';
-                    currentMeet.ageGroups.forEach(ag => {
-                        const option = new Option(ag, ag);
-                        ageGroupSelect.add(option);
-                    });
-                    ageGroupSelect.value = event.ageGroup;
-
+                    editEventForm.elements.ageGroup.value = event.ageGroup;
                     editEventForm.elements.eventUnits.value = event.units;
                     editEventForm.elements.maleEventRecord.value = event.maleRecord || '';
                     editEventForm.elements.maleRecordHolder.value = event.maleRecordHolder || '';
@@ -1284,20 +1220,18 @@
                 complete: function(results) {
                     parsedCsvData = results;
                     const headers = results.meta.fields;
-                    [csvFirstNameSelect, csvSurnameSelect, csvGenderSelect, csvAgeGroupSelect, csvHouseGroupSelect].forEach(sel => sel.innerHTML = '');
+                    [csvFirstNameSelect, csvSurnameSelect, csvGenderSelect, csvHouseGroupSelect].forEach(sel => sel.innerHTML = '');
                     headers.forEach(header => {
-                        [csvFirstNameSelect, csvSurnameSelect, csvGenderSelect, csvAgeGroupSelect, csvHouseGroupSelect].forEach(sel => sel.add(new Option(header, header)));
+                        [csvFirstNameSelect, csvSurnameSelect, csvGenderSelect, csvHouseGroupSelect].forEach(sel => sel.add(new Option(header, header)));
                     });
                     const lowerCaseHeaders = headers.map(h => h.toLowerCase());
                     const firstNameIndex = lowerCaseHeaders.findIndex(h => h.includes('first') || h.includes('given'));
                     const surnameIndex = lowerCaseHeaders.findIndex(h => h.includes('last') || h.includes('surname'));
                     const genderIndex = lowerCaseHeaders.findIndex(h => h.includes('gender') || h.includes('sex'));
-                    const ageGroupIndex = lowerCaseHeaders.findIndex(h => h.includes('age'));
                     const houseIndex = lowerCaseHeaders.findIndex(h => h.includes('house') || h.includes('team'));
                     if (firstNameIndex > -1) csvFirstNameSelect.selectedIndex = firstNameIndex;
                     if (surnameIndex > -1) csvSurnameSelect.selectedIndex = surnameIndex;
                     if (genderIndex > -1) csvGenderSelect.selectedIndex = genderIndex;
-                    if (ageGroupIndex > -1) csvAgeGroupSelect.selectedIndex = ageGroupIndex;
                     if (houseIndex > -1) csvHouseGroupSelect.selectedIndex = houseIndex;
                     csvPreviewHead.innerHTML = `<tr>${headers.map(h => `<th class="p-2 font-semibold text-sm">${h}</th>`).join('')}</tr>`;
                     csvPreviewBody.innerHTML = results.data.slice(0, 5).map(row => `<tr class="border-t border-slate-200">${headers.map(h => `<td class="p-2 text-sm">${row[h] || ''}</td>`).join('')}</tr>`).join('');
@@ -1308,64 +1242,41 @@
             csvFileInput.value = '';
         }
         async function handleConfirmCsvImport() {
-            if (!parsedCsvData || !currentMeetId) return;
-
+            if (!parsedCsvData || !currentMeetId || !currentEventId) return;
+            const firstNameColumn = csvFirstNameSelect.value;
+            const surnameColumn = csvSurnameSelect.value;
+            const genderColumn = csvGenderSelect.value;
+            const houseColumn = csvHouseGroupSelect.value;
+            
+            if (!firstNameColumn || !surnameColumn || !houseColumn || !genderColumn) {
+                alert("Please map all columns: First Name, Surname, Gender, and Team/House.");
+                return;
+            }
+            
             const importBtn = document.getElementById('confirmCsvImport');
             importBtn.disabled = true;
             importBtn.textContent = 'Importing...';
 
             try {
+                const batch = writeBatch(db);
+                const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId, 'results');
                 let count = 0;
-                if (deleteContext.type === 'csv-all') {
-                    // Import to all matching events by age group
-                    const firstNameColumn = csvFirstNameSelect.value;
-                    const surnameColumn = csvSurnameSelect.value;
-                    const genderColumn = csvGenderSelect.value;
-                    const ageGroupColumn = csvAgeGroupSelect.value;
-                    const houseColumn = csvHouseGroupSelect.value;
-                    
-                    if (!firstNameColumn || !surnameColumn || !houseColumn || !genderColumn || !ageGroupColumn) {
-                        alert("Please map all columns: First Name, Surname, Gender, Age Group, and Team/House.");
-                        importBtn.disabled = false;
-                        importBtn.textContent = 'Confirm & Import';
-                        return;
+                parsedCsvData.data.forEach(row => {
+                    const firstName = row[firstNameColumn];
+                    const surname = row[surnameColumn];
+                    const genderRaw = row[genderColumn];
+                    const houseGroup = row[houseColumn];
+                    if (firstName && surname && houseGroup && genderRaw) {
+                        const athleteName = `${firstName.trim()} ${surname.trim()}`;
+                        const gender = genderRaw.trim().toLowerCase().startsWith('m') ? 'Male' : 'Female';
+                        batch.set(doc(resultsCol), { athleteName, houseGroup: houseGroup.trim(), gender, result: null, participated: false, createdAt: new Date() });
+                        count++;
                     }
-                    
-                    const eventsSnapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events'));
-                    const eventsByAgeGroup = {};
-                    eventsSnapshot.docs.forEach(doc => {
-                        const event = { id: doc.id, ...doc.data() };
-                        if (!eventsByAgeGroup[event.ageGroup]) {
-                            eventsByAgeGroup[event.ageGroup] = [];
-                        }
-                        eventsByAgeGroup[event.ageGroup].push(event.id);
-                    });
-
-                    const batch = writeBatch(db);
-                    for (const row of parsedCsvData.data) {
-                        const firstName = row[firstNameColumn];
-                        const surname = row[surnameColumn];
-                        const genderRaw = row[genderColumn];
-                        const ageGroup = row[ageGroupColumn];
-                        const houseGroup = row[houseColumn];
-
-                        if (firstName && surname && houseGroup && genderRaw && ageGroup) {
-                            const athleteName = `${firstName.trim()} ${surname.trim()}`;
-                            const gender = genderRaw.trim().toLowerCase().startsWith('m') ? 'Male' : 'Female';
-                            const matchingEventIds = eventsByAgeGroup[ageGroup.trim()] || [];
-                            
-                            for (const eventId of matchingEventIds) {
-                                const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', eventId, 'results');
-                                batch.set(doc(resultsCol), { athleteName, houseGroup: houseGroup.trim(), gender: gender, result: null, participated: false, createdAt: new Date() });
-                            }
-                            count++;
-                        }
-                    }
-                    await batch.commit();
-                    alert(`${count} participants processed and added to matching events!`);
-                } 
+                });
+                await batch.commit();
                 csvUploadModal.close();
                 parsedCsvData = null;
+                alert(`${count} participants imported successfully!`);
             } catch (error) {
                 console.error("Error importing participants:", error);
                 alert(`Import failed: ${error.message}`);
@@ -1654,17 +1565,9 @@
             deleteConfirmText.textContent = `This will permanently delete the event "${currentEventName}" and all its results. This action cannot be undone.`
             deleteConfirmModal.showModal();
         });
-        deleteMeetBtn.addEventListener('click', () => {
-            const meetId = editMeetForm.elements.meetId.value;
-            const meetName = editMeetForm.elements.meetName.value;
-            deleteContext = { type: 'meet', id: meetId };
-            deleteConfirmText.textContent = `This will permanently delete the competition "${meetName}" and ALL of its events and results. This action cannot be undone.`;
-            deleteConfirmModal.showModal();
-        });
-        
         confirmDeleteBtn.addEventListener('click', handleDelete);
-        uploadCsvEventsBtn.addEventListener('click', () => { 
-            deleteContext = { type: 'csv-all' };
+        uploadCsvBtn.addEventListener('click', () => { 
+            deleteContext = { type: 'csv-single' };
             csvFileInput.click();
         });
         csvFileInput.addEventListener('change', handleFileSelect);
@@ -1778,4 +1681,3 @@
     </script>
 </body>
 </html>
-
