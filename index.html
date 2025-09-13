@@ -244,13 +244,41 @@
         <div class="modal-content bg-white p-6 rounded-lg">
             <h3 class="text-xl font-bold mb-4">Add New Competition</h3>
             <form id="addMeetForm">
-                <div class="mb-6">
+                <div class="mb-4">
                     <label for="meetName" class="block text-sm font-medium text-slate-700">Competition Name</label>
                     <input type="text" id="meetName" name="meetName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" placeholder="e.g., Annual Sports Day 2025" required>
+                </div>
+                <div class="mb-6">
+                    <label for="ageGroups" class="block text-sm font-medium text-slate-700">Age Groups (one per line)</label>
+                    <textarea id="ageGroups" name="ageGroups" rows="4" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" placeholder="U10&#10;U12&#10;U14&#10;Senior"></textarea>
                 </div>
                 <div class="flex justify-end gap-3">
                     <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
                     <button type="submit" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Create Competition</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <dialog id="editMeetModal" class="modal p-0 rounded-lg shadow-xl max-w-md w-full">
+        <div class="modal-content bg-white p-6 rounded-lg">
+            <h3 class="text-xl font-bold mb-4">Edit Competition</h3>
+            <form id="editMeetForm">
+                <input type="hidden" id="editMeetId" name="meetId">
+                <div class="mb-4">
+                    <label for="editMeetName" class="block text-sm font-medium text-slate-700">Competition Name</label>
+                    <input type="text" id="editMeetName" name="meetName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" required>
+                </div>
+                <div class="mb-6">
+                    <label for="editAgeGroups" class="block text-sm font-medium text-slate-700">Age Groups (one per line)</label>
+                    <textarea id="editAgeGroups" name="ageGroups" rows="4" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm"></textarea>
+                </div>
+                <div class="flex justify-between items-center">
+                    <button type="button" id="deleteMeetBtn" class="bg-red-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-red-700 transition">Delete</button>
+                    <div class="flex gap-3">
+                        <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
+                        <button type="submit" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Save Changes</button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -275,12 +303,7 @@
                  <div class="mb-4">
                     <label for="ageGroup" class="block text-sm font-medium text-slate-700">Age Group</label>
                     <select id="ageGroup" name="ageGroup" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" required>
-                        <option value="U10">U10</option>
-                        <option value="U12">U12</option>
-                        <option value="U14">U14</option>
-                        <option value="U16">U16</option>
-                        <option value="Senior">Senior</option>
-                        <option value="Open">Open</option>
+                        <!-- Options will be populated dynamically -->
                     </select>
                 </div>
                  <div class="mb-4">
@@ -353,12 +376,7 @@
                  <div class="mb-4">
                     <label for="editAgeGroup" class="block text-sm font-medium text-slate-700">Age Group</label>
                     <select id="editAgeGroup" name="ageGroup" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" required>
-                        <option value="U10">U10</option>
-                        <option value="U12">U12</option>
-                        <option value="U14">U14</option>
-                        <option value="U16">U16</option>
-                        <option value="Senior">Senior</option>
-                        <option value="Open">Open</option>
+                        <!-- Options will be populated dynamically -->
                     </select>
                 </div>
                  <div class="mb-4">
@@ -632,13 +650,14 @@
         let userId;
         let currentMeetId = null;
         let currentEventId = null;
+        let currentMeet = null;
         let currentMeetName = '';
         let currentEventName = '';
         let currentEvent = null;
         let currentParticipants = [];
         let currentSortOrder = 'placing'; // 'placing' or 'alphabetical'
         let currentGenderView = 'Male';
-        let deleteContext = null; // { type: 'event'/'participant', id: '...' }
+        let deleteContext = null; // { type: 'event'/'participant'/'meet', id: '...' }
 
         let meetsUnsubscribe = null;
         let eventsUnsubscribe = null;
@@ -662,6 +681,9 @@
         const addMeetBtn = document.getElementById('addMeetBtn');
         const addMeetModal = document.getElementById('addMeetModal');
         const addMeetForm = document.getElementById('addMeetForm');
+        const editMeetModal = document.getElementById('editMeetModal');
+        const editMeetForm = document.getElementById('editMeetForm');
+        const deleteMeetBtn = document.getElementById('deleteMeetBtn');
 
         const eventsView = document.getElementById('eventsView');
         const eventsGrid = document.getElementById('eventsGrid');
@@ -672,7 +694,6 @@
         const addEventForm = document.getElementById('addEventForm');
         const editEventModal = document.getElementById('editEventModal');
         const editEventForm = document.getElementById('editEventForm');
-        const eventSearchInput = document.getElementById('eventSearchInput');
         
         const shareLinkBtn = document.getElementById('shareLinkBtn');
         const shareLinkModal = document.getElementById('shareLinkModal');
@@ -729,6 +750,7 @@
         const csvFirstNameSelect = document.getElementById('csvFirstName');
         const csvSurnameSelect = document.getElementById('csvSurname');
         const csvGenderSelect = document.getElementById('csvGender');
+        const csvAgeGroupSelect = document.getElementById('csvAgeGroup');
         const csvHouseGroupSelect = document.getElementById('csvHouseGroup');
         const csvPreviewHead = document.getElementById('csvPreviewHead');
         const csvPreviewBody = document.getElementById('csvPreviewBody');
@@ -768,16 +790,34 @@
             noMeetsMessage.classList.toggle('hidden', meets.length > 0);
             meets.forEach(meet => {
                 const card = document.createElement('div');
-                card.className = 'bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer';
-                card.innerHTML = `<h3 class="text-xl font-bold text-slate-800 truncate">${meet.name}</h3>`;
-                card.addEventListener('click', () => {
+                card.className = 'bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow relative';
+                
+                const cardContent = document.createElement('div');
+                cardContent.className = 'cursor-pointer';
+                cardContent.innerHTML = `<h3 class="text-xl font-bold text-slate-800 truncate">${meet.name}</h3>`;
+                cardContent.addEventListener('click', () => {
                     currentMeetId = meet.id;
                     currentMeetName = meet.name;
+                    currentMeet = meet;
                     housePointsTitle.textContent = `Team Points: ${meet.name}`;
                     eventsTitle.textContent = `Events: ${meet.name}`;
                     showView('events');
                     fetchEvents(meet.id);
                 });
+
+                const editBtn = document.createElement('button');
+                editBtn.className = 'absolute top-2 right-2 p-1 rounded-full hover:bg-slate-200';
+                editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>`;
+                editBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    editMeetForm.elements.meetId.value = meet.id;
+                    editMeetForm.elements.meetName.value = meet.name;
+                    editMeetForm.elements.ageGroups.value = (meet.ageGroups || []).join('\n');
+                    editMeetModal.showModal();
+                });
+
+                card.appendChild(editBtn);
+                card.appendChild(cardContent);
                 meetsGrid.appendChild(card);
             });
         }
@@ -798,14 +838,33 @@
         addMeetForm.addEventListener('submit', (e) => {
              e.preventDefault();
              const formData = new FormData(e.target);
-             const newMeet = { name: formData.get('meetName'), createdAt: new Date() };
+             const ageGroups = formData.get('ageGroups').split('\n').map(s => s.trim()).filter(Boolean);
+             const newMeet = { name: formData.get('meetName'), ageGroups, createdAt: new Date() };
              const meetsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets');
              addDoc(meetsCol, newMeet).then(() => {
                 e.target.reset();
                 addMeetModal.close();
              }).catch(err => console.error("Error adding meet:", err));
         });
-
+        
+        async function handleUpdateMeet(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const meetId = formData.get('meetId');
+            const ageGroups = formData.get('ageGroups').split('\n').map(s => s.trim()).filter(Boolean);
+            const updatedMeet = {
+                name: formData.get('meetName'),
+                ageGroups
+            };
+            const meetDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', meetId);
+            try {
+                await updateDoc(meetDocRef, updatedMeet);
+                editMeetModal.close();
+            } catch (error) {
+                console.error("Error updating meet:", error);
+            }
+        }
+        
         // --- EVENT FUNCTIONS ---
         let allEvents = [];
         function renderEvents(events) {
@@ -861,7 +920,15 @@
                     editEventForm.elements.eventId.value = event.id;
                     editEventForm.elements.eventName.value = event.name;
                     editEventForm.elements.eventType.value = event.eventType;
-                    editEventForm.elements.ageGroup.value = event.ageGroup;
+                    
+                    const ageGroupSelect = editEventForm.elements.ageGroup;
+                    ageGroupSelect.innerHTML = '';
+                    currentMeet.ageGroups.forEach(ag => {
+                        const option = new Option(ag, ag);
+                        ageGroupSelect.add(option);
+                    });
+                    ageGroupSelect.value = event.ageGroup;
+
                     editEventForm.elements.eventUnits.value = event.units;
                     editEventForm.elements.maleEventRecord.value = event.maleRecord || '';
                     editEventForm.elements.maleRecordHolder.value = event.maleRecordHolder || '';
@@ -1258,6 +1325,8 @@
                     
                     if (!firstNameColumn || !surnameColumn || !houseColumn || !genderColumn || !ageGroupColumn) {
                         alert("Please map all columns: First Name, Surname, Gender, Age Group, and Team/House.");
+                        importBtn.disabled = false;
+                        importBtn.textContent = 'Confirm & Import';
                         return;
                     }
                     
@@ -1293,35 +1362,7 @@
                     }
                     await batch.commit();
                     alert(`${count} participants processed and added to matching events!`);
-
-                } else if (deleteContext.type === 'csv-single' && currentEventId) {
-                     // Import to current event only
-                    const firstNameColumn = csvFirstNameSelect.value;
-                    const surnameColumn = csvSurnameSelect.value;
-                    const genderColumn = csvGenderSelect.value;
-                    const houseColumn = csvHouseGroupSelect.value;
-                    
-                    if (!firstNameColumn || !surnameColumn || !houseColumn || !genderColumn) {
-                        alert("Please map all columns: First Name, Surname, Gender, and Team/House.");
-                        return;
-                    }
-                     const batch = writeBatch(db);
-                    const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId, 'results');
-                    parsedCsvData.data.forEach(row => {
-                        const firstName = row[firstNameColumn];
-                        const surname = row[surnameColumn];
-                        const genderRaw = row[genderColumn];
-                        const houseGroup = row[houseColumn];
-                        if (firstName && surname && houseGroup && genderRaw) {
-                            const athleteName = `${firstName.trim()} ${surname.trim()}`;
-                            const gender = genderRaw.trim().toLowerCase().startsWith('m') ? 'Male' : 'Female';
-                            batch.set(doc(resultsCol), { athleteName, houseGroup: houseGroup.trim(), gender: gender, result: null, participated: false, createdAt: new Date() });
-                            count++;
-                        }
-                    });
-                    await batch.commit();
-                    alert(`${count} participants imported successfully!`);
-                }
+                } 
                 csvUploadModal.close();
                 parsedCsvData = null;
             } catch (error) {
@@ -1612,13 +1653,17 @@
             deleteConfirmText.textContent = `This will permanently delete the event "${currentEventName}" and all its results. This action cannot be undone.`
             deleteConfirmModal.showModal();
         });
+        deleteMeetBtn.addEventListener('click', () => {
+            const meetId = editMeetForm.elements.meetId.value;
+            const meetName = editMeetForm.elements.meetName.value;
+            deleteContext = { type: 'meet', id: meetId };
+            deleteConfirmText.textContent = `This will permanently delete the competition "${meetName}" and ALL of its events and results. This action cannot be undone.`;
+            deleteConfirmModal.showModal();
+        });
+        
         confirmDeleteBtn.addEventListener('click', handleDelete);
         uploadCsvEventsBtn.addEventListener('click', () => { 
             deleteContext = { type: 'csv-all' };
-            csvFileInput.click();
-        });
-        uploadCsvBtn.addEventListener('click', () => { 
-            deleteContext = { type: 'csv-single' };
             csvFileInput.click();
         });
         csvFileInput.addEventListener('change', handleFileSelect);
