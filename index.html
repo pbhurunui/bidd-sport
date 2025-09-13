@@ -991,15 +991,23 @@
                 ageGroup: fd.get('ageGroup'),
                 category: fd.get('category'),
                 units: fd.get('eventUnits'),
-                maleRecord: parseFloat(fd.get('maleEventRecord')) || null,
+                maleRecord: parseTimeToSeconds(fd.get('maleEventRecord')),
                 maleRecordHolder: fd.get('maleRecordHolder') || null,
                 maleRecordYear: parseInt(fd.get('maleRecordYear')) || null,
-                femaleRecord: parseFloat(fd.get('femaleEventRecord')) || null,
+                femaleRecord: parseTimeToSeconds(fd.get('femaleEventRecord')),
                 femaleRecordHolder: fd.get('femaleRecordHolder') || null,
                 femaleRecordYear: parseInt(fd.get('femaleRecordYear')) || null
             });
             handleFormSubmit(e, addEventModal, collectionRef, dataBuilder);
         });
+        function parseTimeToSeconds(value) {
+    if (!value) return null;
+    if (typeof value === 'string' && value.includes(':')) {
+        const [min, sec] = value.split(':').map(Number);
+        return min * 60 + parseFloat(sec);
+    }
+    return parseFloat(value);
+}
         
         async function handleUpdateEvent(e) {
             e.preventDefault();
