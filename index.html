@@ -842,16 +842,53 @@
             });
         }
         addMeetForm.addEventListener('submit', (e) => {
-             e.preventDefault();
-             const formData = new FormData(e.target);
-             const ageGroups = formData.get('ageGroups').split('\n').map(s => s.trim()).filter(Boolean);
-             const newMeet = { name: formData.get('meetName'), ageGroups, createdAt: new Date() };
-             const meetsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets');
-             addDoc(meetsCol, newMeet).then(() => {
-                e.target.reset();
-                addMeetModal.close();
-             }).catch(err => console.error("Error adding meet:", err));
-        });
+    e.preventDefault();
+    const formData = new FormData(e.target);
+
+    // ✅ Parse age groups from textarea
+    const ageGroupsRaw = formData.get('ageGroups') || '';
+    const ageGroups = ageGroupsRaw
+        .split('\n')
+        .map(g => g.trim())
+        .filter(g => g.length > 0);
+
+    // ✅ Build meet object
+    const newMeet = {
+        name: formData.get('meetName'),
+        ageGroups,
+        createdAt: new Date()
+    };
+
+    const meetsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets');
+    addDoc(meetsCol, newMeet).then(() => {
+        e.target.reset();
+        addMeetModal.close();
+    }).catch(err => console.error("Error adding meet:", err));
+});
+addMeetForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+
+    // ✅ Parse age groups from textarea
+    const ageGroupsRaw = formData.get('ageGroups') || '';
+    const ageGroups = ageGroupsRaw
+        .split('\n')
+        .map(g => g.trim())
+        .filter(g => g.length > 0);
+
+    // ✅ Build meet object
+    const newMeet = {
+        name: formData.get('meetName'),
+        ageGroups,
+        createdAt: new Date()
+    };
+
+    const meetsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets');
+    addDoc(meetsCol, newMeet).then(() => {
+        e.target.reset();
+        addMeetModal.close();
+    }).catch(err => console.error("Error adding meet:", err));
+});
         
         async function handleUpdateMeet(e) {
             e.preventDefault();
