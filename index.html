@@ -245,9 +245,8 @@
             <h3 class="text-xl font-bold mb-4">Add New Competition</h3>
             <form id="addMeetForm">
                 <div class="mb-4">
-                   <label for="ageGroups">Age Categories (comma-separated, e.g. U10,U12,U14)</label>
-                    <textarea id="ageGroups" name="ageGroups" rows="2" placeholder="Enter age categories like U10,U12,U14"></textarea>
-
+                    <label for="meetName" class="block text-sm font-medium text-slate-700">Competition Name</label>
+                    <input type="text" id="meetName" name="meetName" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" placeholder="e.g., Annual Sports Day 2025" required>
                 </div>
                 <div class="mb-6">
                     <label for="ageGroups" class="block text-sm font-medium text-slate-700">Age Groups (one per line)</label>
@@ -318,7 +317,7 @@
                          <div class="grid grid-cols-3 gap-4 mt-2">
                             <div class="col-span-1">
                                 <label for="maleEventRecord" class="block text-sm text-slate-600">Record</label>
-                                <input type="text" step="any" id="maleEventRecord" name="maleEventRecord" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
+                                <input type="number" step="any" id="maleEventRecord" name="maleEventRecord" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
                             </div>
                             <div class="col-span-2">
                                 <label for="maleRecordHolder" class="block text-sm text-slate-600">Holder</label>
@@ -335,7 +334,7 @@
                          <div class="grid grid-cols-3 gap-4 mt-2">
                             <div class="col-span-1">
                                 <label for="femaleEventRecord" class="block text-sm text-slate-600">Record</label>
-                                <input type="text" step="any" id="femaleEventRecord" name="femaleEventRecord" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
+                                <input type="number" step="any" id="femaleEventRecord" name="femaleEventRecord" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
                             </div>
                             <div class="col-span-2">
                                 <label for="femaleRecordHolder" class="block text-sm text-slate-600">Holder</label>
