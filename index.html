@@ -254,7 +254,7 @@
                 </div>
                 <div class="mb-6">
                     <label for="ageGroups" class="block text-sm font-medium text-slate-700">Age Groups (one per line)</label>
-                    <textarea id="ageGroups" name="ageGroups" rows="4" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" placeholder="U10&#10;U12&#10;U14&#10;Senior"></textarea>
+                    <textarea id="ageGroups" name="ageGroups" rows="4" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" placeholder="U115/16&#17;U19&#10;Open"></textarea>
                 </div>
                 <div class="flex justify-end gap-3">
                     <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
@@ -300,7 +300,7 @@
                     <label for="eventType" class="block text-sm font-medium text-slate-700">Event Type</label>
                     <select id="eventType" name="eventType" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" required>
                         <option value="Time">Time (Lowest score wins)</option>
-                        <option value="Distance">Distance (Highest score wins)</option>
+                        <option value="Distance">Measurement (Highest wins)</option>
                         <option value="Points">Points (Highest score wins)</option>
                     </select>
                 </div>
@@ -321,7 +321,7 @@
                          <div class="grid grid-cols-3 gap-4 mt-2">
                             <div class="col-span-1">
                                 <label for="maleEventRecord" class="block text-sm text-slate-600">Record</label>
-                                <input type="number" step="any" id="maleEventRecord" name="maleEventRecord" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
+                                <input type="text" step="any" id="maleEventRecord" name="maleEventRecord" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
                             </div>
                             <div class="col-span-2">
                                 <label for="maleRecordHolder" class="block text-sm text-slate-600">Holder</label>
@@ -338,7 +338,7 @@
                          <div class="grid grid-cols-3 gap-4 mt-2">
                             <div class="col-span-1">
                                 <label for="femaleEventRecord" class="block text-sm text-slate-600">Record</label>
-                                <input type="number" step="any" id="femaleEventRecord" name="femaleEventRecord" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
+                                <input type="text" step="any" id="femaleEventRecord" name="femaleEventRecord" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
                             </div>
                             <div class="col-span-2">
                                 <label for="femaleRecordHolder" class="block text-sm text-slate-600">Holder</label>
@@ -373,7 +373,7 @@
                     <label for="editEventType" class="block text-sm font-medium text-slate-700">Event Type</label>
                     <select id="editEventType" name="eventType" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" required>
                         <option value="Time">Time (Lowest score wins)</option>
-                        <option value="Distance">Distance (Highest score wins)</option>
+                        <option value="Distance">Measurement (Highest wins)</option>
                         <option value="Points">Points (Highest score wins)</option>
                     </select>
                 </div>
@@ -394,7 +394,7 @@
                          <div class="grid grid-cols-3 gap-4 mt-2">
                             <div class="col-span-1">
                                 <label for="editMaleEventRecord" class="block text-sm text-slate-600">Record</label>
-                                <input type="number" step="any" id="editMaleEventRecord" name="maleEventRecord" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
+                                <input type="text" step="any" id="editMaleEventRecord" name="maleEventRecord" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
                             </div>
                             <div class="col-span-2">
                                 <label for="editMaleRecordHolder" class="block text-sm text-slate-600">Holder</label>
@@ -411,7 +411,7 @@
                          <div class="grid grid-cols-3 gap-4 mt-2">
                             <div class="col-span-1">
                                 <label for="editFemaleEventRecord" class="block text-sm text-slate-600">Record</label>
-                                <input type="number" step="any" id="editFemaleEventRecord" name="femaleEventRecord" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
+                                <input type="text" step="any" id="editFemaleEventRecord" name="femaleEventRecord" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm">
                             </div>
                             <div class="col-span-2">
                                 <label for="editFemaleRecordHolder" class="block text-sm text-slate-600">Holder</label>
@@ -506,7 +506,7 @@
                 <input type="hidden" id="editResultParticipantId" name="participantId">
                 <div class="mb-6">
                     <label for="resultValue" class="block text-sm font-medium text-slate-700">Result</label>
-                    <input type="number" step="any" id="resultValue" name="resultValue" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" required>
+                    <input type="text" step="any" id="resultValue" name="resultValue" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" required>
                 </div>
                 <div class="flex justify-end gap-3">
                     <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
