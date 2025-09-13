@@ -127,6 +127,9 @@
                 <div class="flex justify-between items-center mb-4">
                     <h2 id="eventsTitle" class="text-2xl font-semibold text-slate-800">Events</h2>
                     <div class="flex gap-2">
+                         <button id="uploadCsvEventsBtn" class="bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-700 transition duration-200">
+                            Import Participants
+                        </button>
                          <button id="shareLinkBtn" class="bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-700 transition duration-200">
                             Share Sign-up Link
                         </button>
@@ -135,10 +138,7 @@
                         </button>
                     </div>
                 </div>
-                 <p class="text-slate-500 mb-2 -mt-2">Click on an event to view results, or add a new event for this competition.</p>
-                <div class="mb-4">
-                    <input type="search" id="eventSearchInput" placeholder="Search for an event..." class="w-full px-4 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
+                 <p class="text-slate-500 mb-4 -mt-2">Click on an event to view results, or add a new event for this competition.</p>
                 <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- Event cards will be inserted here -->
                 </div>
@@ -171,10 +171,6 @@
                             </button>
                              <button id="printResultsBtn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
                                 Loading...
-                            </button>
-                            <input type="file" id="csvFileInput" class="hidden" accept=".csv">
-                            <button id="uploadCsvBtn" class="bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-700 transition duration-200">
-                                Upload CSV
                             </button>
                             <button id="addParticipantBtn" class="bg-teal-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-teal-700 transition duration-200">
                                 + Add Participant
@@ -1220,18 +1216,20 @@
                 complete: function(results) {
                     parsedCsvData = results;
                     const headers = results.meta.fields;
-                    [csvFirstNameSelect, csvSurnameSelect, csvGenderSelect, csvHouseGroupSelect].forEach(sel => sel.innerHTML = '');
+                    [csvFirstNameSelect, csvSurnameSelect, csvGenderSelect, csvAgeGroupSelect, csvHouseGroupSelect].forEach(sel => sel.innerHTML = '');
                     headers.forEach(header => {
-                        [csvFirstNameSelect, csvSurnameSelect, csvGenderSelect, csvHouseGroupSelect].forEach(sel => sel.add(new Option(header, header)));
+                        [csvFirstNameSelect, csvSurnameSelect, csvGenderSelect, csvAgeGroupSelect, csvHouseGroupSelect].forEach(sel => sel.add(new Option(header, header)));
                     });
                     const lowerCaseHeaders = headers.map(h => h.toLowerCase());
                     const firstNameIndex = lowerCaseHeaders.findIndex(h => h.includes('first') || h.includes('given'));
                     const surnameIndex = lowerCaseHeaders.findIndex(h => h.includes('last') || h.includes('surname'));
                     const genderIndex = lowerCaseHeaders.findIndex(h => h.includes('gender') || h.includes('sex'));
+                    const ageGroupIndex = lowerCaseHeaders.findIndex(h => h.includes('age'));
                     const houseIndex = lowerCaseHeaders.findIndex(h => h.includes('house') || h.includes('team'));
                     if (firstNameIndex > -1) csvFirstNameSelect.selectedIndex = firstNameIndex;
                     if (surnameIndex > -1) csvSurnameSelect.selectedIndex = surnameIndex;
                     if (genderIndex > -1) csvGenderSelect.selectedIndex = genderIndex;
+                    if (ageGroupIndex > -1) csvAgeGroupSelect.selectedIndex = ageGroupIndex;
                     if (houseIndex > -1) csvHouseGroupSelect.selectedIndex = houseIndex;
                     csvPreviewHead.innerHTML = `<tr>${headers.map(h => `<th class="p-2 font-semibold text-sm">${h}</th>`).join('')}</tr>`;
                     csvPreviewBody.innerHTML = results.data.slice(0, 5).map(row => `<tr class="border-t border-slate-200">${headers.map(h => `<td class="p-2 text-sm">${row[h] || ''}</td>`).join('')}</tr>`).join('');
@@ -1242,41 +1240,90 @@
             csvFileInput.value = '';
         }
         async function handleConfirmCsvImport() {
-            if (!parsedCsvData || !currentMeetId || !currentEventId) return;
-            const firstNameColumn = csvFirstNameSelect.value;
-            const surnameColumn = csvSurnameSelect.value;
-            const genderColumn = csvGenderSelect.value;
-            const houseColumn = csvHouseGroupSelect.value;
-            
-            if (!firstNameColumn || !surnameColumn || !houseColumn || !genderColumn) {
-                alert("Please map all columns: First Name, Surname, Gender, and Team/House.");
-                return;
-            }
-            
+            if (!parsedCsvData || !currentMeetId) return;
+
             const importBtn = document.getElementById('confirmCsvImport');
             importBtn.disabled = true;
             importBtn.textContent = 'Importing...';
 
             try {
-                const batch = writeBatch(db);
-                const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId, 'results');
                 let count = 0;
-                parsedCsvData.data.forEach(row => {
-                    const firstName = row[firstNameColumn];
-                    const surname = row[surnameColumn];
-                    const genderRaw = row[genderColumn];
-                    const houseGroup = row[houseColumn];
-                    if (firstName && surname && houseGroup && genderRaw) {
-                        const athleteName = `${firstName.trim()} ${surname.trim()}`;
-                        const gender = genderRaw.trim().toLowerCase().startsWith('m') ? 'Male' : 'Female';
-                        batch.set(doc(resultsCol), { athleteName, houseGroup: houseGroup.trim(), gender, result: null, participated: false, createdAt: new Date() });
-                        count++;
+                if (deleteContext.type === 'csv-all') {
+                    // Import to all matching events by age group
+                    const firstNameColumn = csvFirstNameSelect.value;
+                    const surnameColumn = csvSurnameSelect.value;
+                    const genderColumn = csvGenderSelect.value;
+                    const ageGroupColumn = csvAgeGroupSelect.value;
+                    const houseColumn = csvHouseGroupSelect.value;
+                    
+                    if (!firstNameColumn || !surnameColumn || !houseColumn || !genderColumn || !ageGroupColumn) {
+                        alert("Please map all columns: First Name, Surname, Gender, Age Group, and Team/House.");
+                        return;
                     }
-                });
-                await batch.commit();
+                    
+                    const eventsSnapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events'));
+                    const eventsByAgeGroup = {};
+                    eventsSnapshot.docs.forEach(doc => {
+                        const event = { id: doc.id, ...doc.data() };
+                        if (!eventsByAgeGroup[event.ageGroup]) {
+                            eventsByAgeGroup[event.ageGroup] = [];
+                        }
+                        eventsByAgeGroup[event.ageGroup].push(event.id);
+                    });
+
+                    const batch = writeBatch(db);
+                    for (const row of parsedCsvData.data) {
+                        const firstName = row[firstNameColumn];
+                        const surname = row[surnameColumn];
+                        const genderRaw = row[genderColumn];
+                        const ageGroup = row[ageGroupColumn];
+                        const houseGroup = row[houseColumn];
+
+                        if (firstName && surname && houseGroup && genderRaw && ageGroup) {
+                            const athleteName = `${firstName.trim()} ${surname.trim()}`;
+                            const gender = genderRaw.trim().toLowerCase().startsWith('m') ? 'Male' : 'Female';
+                            const matchingEventIds = eventsByAgeGroup[ageGroup.trim()] || [];
+                            
+                            for (const eventId of matchingEventIds) {
+                                const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', eventId, 'results');
+                                batch.set(doc(resultsCol), { athleteName, houseGroup: houseGroup.trim(), gender: gender, result: null, participated: false, createdAt: new Date() });
+                            }
+                            count++;
+                        }
+                    }
+                    await batch.commit();
+                    alert(`${count} participants processed and added to matching events!`);
+
+                } else if (deleteContext.type === 'csv-single' && currentEventId) {
+                     // Import to current event only
+                    const firstNameColumn = csvFirstNameSelect.value;
+                    const surnameColumn = csvSurnameSelect.value;
+                    const genderColumn = csvGenderSelect.value;
+                    const houseColumn = csvHouseGroupSelect.value;
+                    
+                    if (!firstNameColumn || !surnameColumn || !houseColumn || !genderColumn) {
+                        alert("Please map all columns: First Name, Surname, Gender, and Team/House.");
+                        return;
+                    }
+                     const batch = writeBatch(db);
+                    const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'meets', currentMeetId, 'events', currentEventId, 'results');
+                    parsedCsvData.data.forEach(row => {
+                        const firstName = row[firstNameColumn];
+                        const surname = row[surnameColumn];
+                        const genderRaw = row[genderColumn];
+                        const houseGroup = row[houseColumn];
+                        if (firstName && surname && houseGroup && genderRaw) {
+                            const athleteName = `${firstName.trim()} ${surname.trim()}`;
+                            const gender = genderRaw.trim().toLowerCase().startsWith('m') ? 'Male' : 'Female';
+                            batch.set(doc(resultsCol), { athleteName, houseGroup: houseGroup.trim(), gender: gender, result: null, participated: false, createdAt: new Date() });
+                            count++;
+                        }
+                    });
+                    await batch.commit();
+                    alert(`${count} participants imported successfully!`);
+                }
                 csvUploadModal.close();
                 parsedCsvData = null;
-                alert(`${count} participants imported successfully!`);
             } catch (error) {
                 console.error("Error importing participants:", error);
                 alert(`Import failed: ${error.message}`);
@@ -1566,6 +1613,10 @@
             deleteConfirmModal.showModal();
         });
         confirmDeleteBtn.addEventListener('click', handleDelete);
+        uploadCsvEventsBtn.addEventListener('click', () => { 
+            deleteContext = { type: 'csv-all' };
+            csvFileInput.click();
+        });
         uploadCsvBtn.addEventListener('click', () => { 
             deleteContext = { type: 'csv-single' };
             csvFileInput.click();
