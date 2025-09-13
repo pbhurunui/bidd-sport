@@ -1,7 +1,7 @@
 // This service worker file is for Progressive Web App (PWA) functionality.
 // It allows the app to work offline by caching assets.
 
-const CACHE_NAME = 'bidd-sports-cache-v15'; // Incremented cache version
+const CACHE_NAME = 'bidd-sports-cache-v16'; // Incremented cache version
 const urlsToCache = [
   '/',
   'index.html',
@@ -26,6 +26,8 @@ self.addEventListener('install', event => {
         console.log('Opened cache and caching assets for offline use.');
         return Promise.all(
           urlsToCache.map(url => {
+            // For cross-origin requests, we need to create a new Request object.
+            // Using 'no-cors' can lead to opaque responses, but it's a pragmatic way to cache third-party scripts.
             const request = (url.startsWith('http')) ? new Request(url, { mode: 'no-cors' }) : url;
             return cache.add(request).catch(error => {
               console.warn(`Failed to cache ${url}:`, error);
@@ -78,3 +80,4 @@ self.addEventListener('activate', event => {
     }).then(() => self.clients.claim())
   );
 });
+
