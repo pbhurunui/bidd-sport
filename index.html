@@ -702,9 +702,11 @@
         const uploadCsvEventsBtn = document.getElementById('uploadCsvEventsBtn');
         
         const shareLinkBtn = document.getElementById('shareLinkBtn');
+        const shareScorerLinkBtn = document.getElementById('shareScorerLinkBtn');
         const shareLinkModal = document.getElementById('shareLinkModal');
         const shareableLinkInput = document.getElementById('shareableLink');
         const copyLinkBtn = document.getElementById('copyLinkBtn');
+        const shareLinkDescription = document.getElementById('shareLinkDescription');
 
         const signupView = document.getElementById('signupView');
         const signupCompetitionName = document.getElementById('signupCompetitionName');
@@ -770,6 +772,8 @@
         const maleTab = document.getElementById('maleTab');
         const femaleTab = document.getElementById('femaleTab');
 
+        let isScorerMode = false;
+        
         function showView(view) {
             meetsView.classList.toggle('hidden', view !== 'meets');
             eventsView.classList.toggle('hidden', view !== 'events');
@@ -811,18 +815,20 @@
                     fetchEvents(meet.id);
                 });
 
-                const editBtn = document.createElement('button');
-                editBtn.className = 'absolute top-2 right-2 p-1 rounded-full hover:bg-slate-200';
-                editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>`;
-                editBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    editMeetForm.elements.meetId.value = meet.id;
-                    editMeetForm.elements.meetName.value = meet.name;
-                    editMeetForm.elements.ageGroups.value = (meet.ageGroups || []).join('\n');
-                    editMeetModal.showModal();
-                });
+                if (!isScorerMode) {
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'absolute top-2 right-2 p-1 rounded-full hover:bg-slate-200';
+                    editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>`;
+                    editBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        editMeetForm.elements.meetId.value = meet.id;
+                        editMeetForm.elements.meetName.value = meet.name;
+                        editMeetForm.elements.ageGroups.value = (meet.ageGroups || []).join('\n');
+                        editMeetModal.showModal();
+                    });
+                        card.appendChild(editBtn)
+                }
 
-                card.appendChild(editBtn);
                 card.appendChild(cardContent);
                 meetsGrid.appendChild(card);
             });
@@ -935,23 +941,24 @@
                         showView('results');
                         fetchResults(currentMeetId, event.id, event);
                     });
-
-                    const editBtn = document.createElement('button');
-                    editBtn.className = 'absolute top-2 right-2 p-1 rounded-full hover:bg-slate-200';
-                    editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>`;
-                    editBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        editEventForm.elements.eventId.value = event.id;
-                        editEventForm.elements.eventName.value = event.name;
-                        editEventForm.elements.eventType.value = event.eventType;
+                    
+                    if (!isScorerMode) {
+                        const editBtn = document.createElement('button');
+                        editBtn.className = 'absolute top-2 right-2 p-1 rounded-full hover:bg-slate-200';
+                        editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>`;
+                        editBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            editEventForm.elements.eventId.value = event.id;
+                            editEventForm.elements.eventName.value = event.name;
+                            editEventForm.elements.eventType.value = event.eventType;
                         
-                        const ageGroupSelect = editEventForm.elements.ageGroup;
-                        ageGroupSelect.innerHTML = '';
-                        currentMeet.ageGroups.forEach(ag => {
-                            const option = new Option(ag, ag);
-                            ageGroupSelect.add(option);
-                        });
-                        ageGroupSelect.value = event.ageGroup;
+                            const ageGroupSelect = editEventForm.elements.ageGroup;
+                            ageGroupSelect.innerHTML = '';
+                            currentMeet.ageGroups.forEach(ag => {
+                                const option = new Option(ag, ag);
+                                ageGroupSelect.add(option);
+                            });
+                            ageGroupSelect.value = event.ageGroup;
 
                         editEventForm.elements.eventUnits.value = event.units;
                         editEventForm.elements.maleEventRecord.value = event.maleRecord || '';
@@ -960,10 +967,12 @@
                         editEventForm.elements.femaleEventRecord.value = event.femaleRecord || '';
                         editEventForm.elements.femaleRecordHolder.value = event.femaleRecordHolder || '';
                         editEventForm.elements.femaleRecordYear.value = event.femaleRecordYear || '';
+                        editEventForm.elements.category.value = event.category || '';
                         editEventModal.showModal();
                     });
+                        card.appendChild(editBtn);
+                    }
                     
-                    card.appendChild(editBtn);
                     card.appendChild(cardContent);
                     grid.appendChild(card);
                 });
@@ -1115,39 +1124,41 @@
             });
             actionsCell.appendChild(resultButton);
 
-            const editButton = document.createElement('button');
-            editButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>`;
-            editButton.className = 'text-slate-500 hover:text-indigo-600';
-            editButton.title = "Edit Participant";
-            editButton.addEventListener('click', () => {
-                editParticipantIdInput.value = participant.id;
-                editAthleteNameInput.value = participant.athleteName;
-                editGenderSelect.value = participant.gender;
-                editHouseGroupSelect.value = participant.houseGroup;
-                editParticipantModal.showModal();
-            });
-            actionsCell.appendChild(editButton);
+            if (!isScorerMode) {
+                const editButton = document.createElement('button');
+                editButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>`;
+                editButton.className = 'text-slate-500 hover:text-indigo-600';
+                editButton.title = "Edit Participant";
+                editButton.addEventListener('click', () => {
+                    editParticipantIdInput.value = participant.id;
+                    editAthleteNameInput.value = participant.athleteName;
+                    editGenderSelect.value = participant.gender;
+                    editHouseGroupSelect.value = participant.houseGroup;
+                    editParticipantModal.showModal();
+                });
+                actionsCell.appendChild(editButton);
 
-            if (hasResult) {
-                const clearButton = document.createElement('button');
-                clearButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>`;
-                clearButton.className = 'text-slate-500 hover:text-red-600';
-                clearButton.title = "Clear Result";
-                clearButton.addEventListener('click', () => handleClearResult(participant.id));
-                actionsCell.appendChild(clearButton);
+                if (hasResult) {
+                    const clearButton = document.createElement('button');
+                    clearButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>`;
+                    clearButton.className = 'text-slate-500 hover:text-red-600';
+                    clearButton.title = "Clear Result";
+                    clearButton.addEventListener('click', () => handleClearResult(participant.id));
+                    actionsCell.appendChild(clearButton);
+                }
+
+                const deleteParticipantBtn = document.createElement('button');
+                deleteParticipantBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>`;
+                deleteParticipantBtn.className = 'text-slate-500 hover:text-red-600';
+                deleteParticipantBtn.title = "Delete Participant";
+                deleteParticipantBtn.addEventListener('click', () => {
+                    deleteContext = { type: 'participant', id: participant.id };
+                    deleteConfirmText.textContent = `This will permanently delete ${participant.athleteName} from this event. This action cannot be undone.`;
+                    deleteConfirmModal.showModal();
+                });
+                actionsCell.appendChild(deleteParticipantBtn);
             }
-
-            const deleteParticipantBtn = document.createElement('button');
-            deleteParticipantBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>`;
-            deleteParticipantBtn.className = 'text-slate-500 hover:text-red-600';
-            deleteParticipantBtn.title = "Delete Participant";
-            deleteParticipantBtn.addEventListener('click', () => {
-                deleteContext = { type: 'participant', id: participant.id };
-                deleteConfirmText.textContent = `This will permanently delete ${participant.athleteName} from this event. This action cannot be undone.`;
-                deleteConfirmModal.showModal();
-            });
-            actionsCell.appendChild(deleteParticipantBtn);
-
+            
             row.querySelector('.participation-check').addEventListener('change', (e) => handleToggleParticipation(e.target.dataset.id, e.target.checked));
 
             return row;
@@ -1361,7 +1372,6 @@
 
             try {
                 let count = 0;
-                if (deleteContext.type === 'csv-all') {
                     // Import to all matching events by age group
                     const firstNameColumn = csvFirstNameSelect.value;
                     const surnameColumn = csvSurnameSelect.value;
@@ -1679,6 +1689,7 @@
         backToMeetsBtn.addEventListener('click', () => {
              if (eventsUnsubscribe) { eventsUnsubscribe(); eventsUnsubscribe = null; }
             currentMeetId = null;
+            window.history.pushState({}, '', window.location.pathname);
             showView('meets');
         });
         backToEventsBtn.addEventListener('click', async () => {
@@ -1690,10 +1701,17 @@
 
         shareLinkBtn.addEventListener('click', () => {
             const url = `${window.location.origin}${window.location.pathname}?signup=${currentMeetId}`;
+            shareLinkDescription.textContent = 'Share this link with participants to allow them to sign up for events in this competition.';
             shareableLinkInput.value = url;
             shareLinkModal.showModal();
         });
-
+        shareScorerLinkBtn.addEventListener('click', () => {
+            const url = `${window.location.origin}${window.location.pathname}?scorer=${currentMeetId}`;
+            shareLinkDescription.textContent = 'Share this link with users who need to record results for this competition.';
+            shareableLinkInput.value = url;
+            shareLinkModal.showModal();
+        });
+        
         copyLinkBtn.addEventListener('click', () => {
             shareableLinkInput.select();
             document.execCommand('copy');
@@ -1716,6 +1734,10 @@
         });
 
         confirmDeleteBtn.addEventListener('click', handleDelete);
+        uploadCsvBtn.addEventListener('click', () => { 
+            deleteContext = { type: 'csv-single' };
+            csvFileInput.click();
+        });
         uploadCsvEventsBtn.addEventListener('click', () => { 
             deleteContext = { type: 'csv-all' };
             csvFileInput.click();
@@ -1733,7 +1755,6 @@
             renderParticipants(currentParticipants, currentEvent);
         });
         
-
         function updateTabs() {
             if(currentGenderView === 'Male') {
                 maleTab.classList.add('tab-active');
@@ -1764,10 +1785,26 @@
             printQualifiersBtn.textContent = 'Export Qualifiers';
         }
 
+        function setupScorerMode() {
+            isScorerMode = true;
+            document.getElementById('addMeetBtn').classList.add('hidden');
+            document.querySelectorAll('#meetsGrid button').forEach(btn => btn.classList.add('hidden'));
+            document.getElementById('housePointsContainer').classList.add('hidden');
+            document.getElementById('shareLinkBtn').classList.add('hidden');
+            document.getElementById('shareScorerLinkBtn').classList.add('hidden');
+            document.getElementById('addEventBtn').classList.add('hidden');
+            document.getElementById('uploadCsvEventsBtn').classList.add('hidden');
+            document.getElementById('deleteEventBtn').classList.add('hidden');
+            document.getElementById('uploadCsvBtn').classList.add('hidden');
+            document.getElementById('addParticipantBtn').classList.add('hidden');
+            document.querySelectorAll('.edit-participant-btn, .delete-participant-btn').forEach(btn => btn.classList.add('hidden'));
+        }
+        
         async function init() {
             console.log("BIDD SPORTS Initializing...");
             const urlParams = new URLSearchParams(window.location.search);
             const signupMeetId = urlParams.get('signup');
+            const scorerMeetId = urlParams.get('scorer');
 
             const pdfLibraryCheck = setInterval(() => {
                 if (window.pdfLibrariesLoaded) {
@@ -1792,7 +1829,16 @@
                         if (signupMeetId) {
                             currentMeetId = signupMeetId;
                             await fetchAndRenderSignupPage(signupMeetId);
-                        } else {
+                        } else if(scorerMeetId) {
+                            isScorerMode = true;
+                            currentMeetId = scorerMeetId;
+                            loadingEl.classList.add('hidden');
+                            mainContentEl.classList.remove('hidden');
+                            showView('events');
+                            fetchEvents(scorerMeetId);
+                            setupScorerMode();
+                        }
+                        else {
                             await fetchMeets();
                         }
                     } else {
