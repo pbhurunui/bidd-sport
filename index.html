@@ -72,7 +72,7 @@
                 </div>
                 <div>
                     <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Bidd Sports</h1>
-                    <p class="text-slate-600 mt-1">Your official tool for managing sports competitions.</p>
+                    <p class="text-slate-600 mt-1">Your official tool for managing sporting competitions.</p>
                 </div>
             </div>
         </header>
@@ -127,8 +127,8 @@
                 <div class="flex justify-between items-center mb-4">
                     <h2 id="eventsTitle" class="text-2xl font-semibold text-slate-800">Events</h2>
                     <div class="flex gap-2">
-                         <button id="shareScorerLinkBtn" class="bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-700 transition duration-200">
-                            Share Scorer Link
+                         <button id="uploadCsvEventsBtn" class="bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-700 transition duration-200">
+                            Import Participants
                         </button>
                          <button id="shareLinkBtn" class="bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-700 transition duration-200">
                             Share Sign-up Link
@@ -173,9 +173,6 @@
                                 Loading...
                             </button>
                             <input type="file" id="csvFileInput" class="hidden" accept=".csv">
-                            <button id="uploadCsvBtn" class="bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-700 transition duration-200">
-                                Upload CSV
-                            </button>
                             <button id="addParticipantBtn" class="bg-teal-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-teal-700 transition duration-200">
                                 + Add Participant
                             </button>
@@ -254,7 +251,7 @@
                 </div>
                 <div class="mb-6">
                     <label for="ageGroups" class="block text-sm font-medium text-slate-700">Age Groups (one per line)</label>
-                    <textarea id="ageGroups" name="ageGroups" rows="4" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" placeholder="U15/16&#10;U17&#10;U19&#10;Open"></textarea>
+                    <textarea id="ageGroups" name="ageGroups" rows="4" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm" placeholder="U10&#10;U12&#10;U14&#10;Senior"></textarea>
                 </div>
                 <div class="flex justify-end gap-3">
                     <button type="button" class="cancel-btn bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">Cancel</button>
@@ -569,8 +566,8 @@
     
     <dialog id="shareLinkModal" class="modal p-0 rounded-lg shadow-xl max-w-lg w-full">
         <div class="modal-content bg-white p-6 rounded-lg">
-            <h3 class="text-xl font-bold mb-4">Share Link</h3>
-            <p id="shareLinkDescription" class="text-slate-600 mb-4"></p>
+            <h3 class="text-xl font-bold mb-4">Share Sign-up Link</h3>
+            <p class="text-slate-600 mb-4">Share this link with participants to allow them to sign up for events in this competition.</p>
             <input type="text" id="shareableLink" readonly class="w-full p-2 border rounded-md bg-slate-100">
             <div class="flex justify-end gap-3 mt-4">
                 <button id="copyLinkBtn" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">Copy Link</button>
@@ -642,12 +639,12 @@
         // ======================== IMPORTANT FIREBASE SETUP ===================================
         // =====================================================================================
         const firebaseConfig = {
-          apiKey: "AIzaSyA2BPCoA6qWKYLXBfpjhzvaTn4HyC03sE4",
-          authDomain: "bidd-sports.firebaseapp.com",
-          projectId: "bidd-sports",
-          storageBucket: "bidd-sports.firebasestorage.app",
-          messagingSenderId: "863210699877",
-          appId: "1:863210699877:web:84d08bb519ae1aeb7eda8c"
+            apiKey: "AIzaSyA2BPCoA6qWKYLXBfpjhzvaTn4HyC03sE4",
+            authDomain: "bidd-sports.firebaseapp.com",
+            projectId: "bidd-sports",
+            storageBucket: "bidd-sports.appspot.com",
+            messagingSenderId: "863210699877",
+            appId: "1:863210699877:web:84d08bb519ae1aeb7eda8c"
         };
         const appId = "bidd-sports";
         // =====================================================================================
@@ -702,13 +699,12 @@
         const addEventForm = document.getElementById('addEventForm');
         const editEventModal = document.getElementById('editEventModal');
         const editEventForm = document.getElementById('editEventForm');
+        const uploadCsvEventsBtn = document.getElementById('uploadCsvEventsBtn');
         
         const shareLinkBtn = document.getElementById('shareLinkBtn');
-        const shareScorerLinkBtn = document.getElementById('shareScorerLinkBtn');
         const shareLinkModal = document.getElementById('shareLinkModal');
         const shareableLinkInput = document.getElementById('shareableLink');
         const copyLinkBtn = document.getElementById('copyLinkBtn');
-        const shareLinkDescription = document.getElementById('shareLinkDescription');
 
         const signupView = document.getElementById('signupView');
         const signupCompetitionName = document.getElementById('signupCompetitionName');
@@ -760,6 +756,7 @@
         const csvFirstNameSelect = document.getElementById('csvFirstName');
         const csvSurnameSelect = document.getElementById('csvSurname');
         const csvGenderSelect = document.getElementById('csvGender');
+        const csvAgeGroupSelect = document.getElementById('csvAgeGroup');
         const csvHouseGroupSelect = document.getElementById('csvHouseGroup');
         const csvPreviewHead = document.getElementById('csvPreviewHead');
         const csvPreviewBody = document.getElementById('csvPreviewBody');
@@ -772,8 +769,6 @@
         const sortByNameBtn = document.getElementById('sortByNameBtn');
         const maleTab = document.getElementById('maleTab');
         const femaleTab = document.getElementById('femaleTab');
-
-        let isScorerMode = false;
 
         function showView(view) {
             meetsView.classList.toggle('hidden', view !== 'meets');
@@ -941,36 +936,34 @@
                         fetchResults(currentMeetId, event.id, event);
                     });
 
-                    if (!isScorerMode) {
-                        const editBtn = document.createElement('button');
-                        editBtn.className = 'absolute top-2 right-2 p-1 rounded-full hover:bg-slate-200';
-                        editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>`;
-                        editBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            editEventForm.elements.eventId.value = event.id;
-                            editEventForm.elements.eventName.value = event.name;
-                            editEventForm.elements.eventType.value = event.eventType;
-                            
-                            const ageGroupSelect = editEventForm.elements.ageGroup;
-                            ageGroupSelect.innerHTML = '';
-                            currentMeet.ageGroups.forEach(ag => {
-                                const option = new Option(ag, ag);
-                                ageGroupSelect.add(option);
-                            });
-                            ageGroupSelect.value = event.ageGroup;
-
-                            editEventForm.elements.eventUnits.value = event.units;
-                            editEventForm.elements.maleEventRecord.value = event.maleRecord || '';
-                            editEventForm.elements.maleRecordHolder.value = event.maleRecordHolder || '';
-                            editEventForm.elements.maleRecordYear.value = event.maleRecordYear || '';
-                            editEventForm.elements.femaleEventRecord.value = event.femaleRecord || '';
-                            editEventForm.elements.femaleRecordHolder.value = event.femaleRecordHolder || '';
-                            editEventForm.elements.femaleRecordYear.value = event.femaleRecordYear || '';
-                            editEventModal.showModal();
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'absolute top-2 right-2 p-1 rounded-full hover:bg-slate-200';
+                    editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>`;
+                    editBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        editEventForm.elements.eventId.value = event.id;
+                        editEventForm.elements.eventName.value = event.name;
+                        editEventForm.elements.eventType.value = event.eventType;
+                        
+                        const ageGroupSelect = editEventForm.elements.ageGroup;
+                        ageGroupSelect.innerHTML = '';
+                        currentMeet.ageGroups.forEach(ag => {
+                            const option = new Option(ag, ag);
+                            ageGroupSelect.add(option);
                         });
-                         card.appendChild(editBtn);
-                    }
+                        ageGroupSelect.value = event.ageGroup;
+
+                        editEventForm.elements.eventUnits.value = event.units;
+                        editEventForm.elements.maleEventRecord.value = event.maleRecord || '';
+                        editEventForm.elements.maleRecordHolder.value = event.maleRecordHolder || '';
+                        editEventForm.elements.maleRecordYear.value = event.maleRecordYear || '';
+                        editEventForm.elements.femaleEventRecord.value = event.femaleRecord || '';
+                        editEventForm.elements.femaleRecordHolder.value = event.femaleRecordHolder || '';
+                        editEventForm.elements.femaleRecordYear.value = event.femaleRecordYear || '';
+                        editEventModal.showModal();
+                    });
                     
+                    card.appendChild(editBtn);
                     card.appendChild(cardContent);
                     grid.appendChild(card);
                 });
@@ -1304,6 +1297,23 @@
                 } catch(error) {
                     console.error("Error deleting participant:", error);
                     alert("Could not delete participant. Please check connection.");
+                }
+            } else if (type === 'meet') {
+                 try {
+                    const meetDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'meets', id);
+                    const eventsSnapshot = await getDocs(collection(meetDocRef, 'events'));
+                    for(const eventDoc of eventsSnapshot.docs) {
+                        const resultsSnapshot = await getDocs(collection(eventDoc.ref, 'results'));
+                        for(const resultDoc of resultsSnapshot.docs) {
+                            await deleteDoc(resultDoc.ref);
+                        }
+                        await deleteDoc(eventDoc.ref);
+                    }
+                    await deleteDoc(meetDocRef);
+                    editMeetModal.close();
+                } catch(error) {
+                    console.error("Error deleting meet:", error);
+                    alert("Could not delete meet. Please check connection.");
                 }
             }
             deleteConfirmModal.close();
@@ -1706,8 +1716,8 @@
         });
 
         confirmDeleteBtn.addEventListener('click', handleDelete);
-        uploadCsvBtn.addEventListener('click', () => { 
-            deleteContext = { type: 'csv-single' };
+        uploadCsvEventsBtn.addEventListener('click', () => { 
+            deleteContext = { type: 'csv-all' };
             csvFileInput.click();
         });
         csvFileInput.addEventListener('change', handleFileSelect);
@@ -1723,11 +1733,6 @@
             renderParticipants(currentParticipants, currentEvent);
         });
         
-        eventSearchInput.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const filteredEvents = allEvents.filter(event => event.name.toLowerCase().includes(searchTerm));
-            renderEvents(filteredEvents);
-        });
 
         function updateTabs() {
             if(currentGenderView === 'Male') {
